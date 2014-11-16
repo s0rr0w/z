@@ -1,0 +1,48 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Простейший пример</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	
+	<style type="text/css">
+		.red { color: #e74c3c }
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Простейший пример</h1>
+
+	<div class="content">
+		<p>
+			<e on="makeTextRed" do="addClass">red</e>
+			Этот текст должен быть красным
+		</p>
+		<exec>
+			<dispatch e="makeTextRed"></dispatch>
+		</exec>
+	</div>
+
+<code class="html"><span class="tag">&lt;p&gt;</span>
+  <span class="comment">&lt;!-- 
+  Устанавливаем z-обработчик тегу &lt;p&gt; 
+  По событию "makeTextRed" необходимо вызвать "addClass"
+  и в качестве параметра передать имя класса "red" 
+  --&gt</span>
+  <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;<span class="txt">red</span>&lt;/e&gt;</span>
+  <span class="txt">Этот текст должен быть красным</span>
+<span class="tag">&lt;/p&gt;</span>
+<span class="comment">&lt;!-- После загрузки страницы выполняем операции --&gt</span>
+<span class="zTag">&lt;exec&gt;
+  <span class="comment">&lt;!-- 
+  Запускаем событие "makeTextRed" 
+  начиная от родительского элемена тега &lt;exec&gt; 
+  --&gt</span>
+  &lt;dispatch e=<span class="attrVal">"makeTextRed"</span>&gt;&lt;/dispatch&gt;
+&lt;/exec&gt;</span>
+</code>	
+
+</body>
+</html>

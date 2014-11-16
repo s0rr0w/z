@@ -1,0 +1,118 @@
+body 
+{
+	background: #2c3e50;
+	color: #ecf0f1;
+	font: normal 12pt Arial;
+	padding: 30px 40px;
+}
+body::after
+{
+	content: "z";
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	font-size: 200px;
+	z-index: -1;
+	color: rgba(255,255,255,0.1);
+	line-height: 85px;
+}
+h1
+{
+	font-weight: normal;
+}
+h1::before
+{
+	content: "";
+	padding: 0.2em 0.75em;
+	margin-right: 0.5em;
+	width: 0px;
+	height: 0px;
+	background: #1abc9c;
+	border-radius: 10em;
+}
+a
+{
+	color: #1abc9c;
+	text-decoration: none;
+}
+a:hover, a:active
+{
+	text-decoration: underline;
+}
+a:visited
+{
+	color: #16a085;
+}
+.content
+{
+	padding-left: 65px;
+}
+.backLink:link, .backLink:visited
+{
+	font: normal 20pt Arial;
+	position: absolute;
+	color: #ecf0f1;
+	text-decoration: none;
+	padding: 0.3em 0.65em;
+	margin: 0.55em 0px;
+}
+li
+{
+	margin: 10px 0px;
+}
+code
+{
+	display: block;
+	white-space: pre;
+	margin: 40px 20px 20px 65px;
+	padding: 20px;
+	background: #34495e;
+	overflow: auto;
+}
+code.html::before
+{
+	font-family: Arial;
+	content: "HTML";
+	display: block;
+	background: #7f8c8d;
+	padding: 8px 20px;
+	margin: -20px -20px 20px;
+	position: relative;
+}
+code .tag
+{
+	color: #d35400;
+}
+code .zTag
+{
+	color: #3498db;
+}
+code .txt
+{
+	color: #ecf0f1;
+}
+code .attrVal
+{
+	color: #1abc9c;
+}
+code .comment
+{
+	color: #7f8c8d;
+}
+
+.pMarker::before, 
+.bMarker::before, 
+.liMarker::before
+{
+	content: "#";
+	display: inline-block;
+	color: #2980b9;
+	background: #34495e;
+	border-radius: 3px;
+	font: normal 9pt monospace;
+	padding: 2px;
+	vertical-align: top;
+}
+.pMarker::before { content: "<p>" }
+.bMarker::before { content: "<b>" }
+.liMarker::before { content: "<li>" }

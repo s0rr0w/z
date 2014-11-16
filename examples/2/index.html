@@ -1,0 +1,60 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Запуск события по нажатию на ссылку</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	
+	<style type="text/css">
+		.red { color: #e74c3c }
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Запуск события по нажатию на ссылку</h1>
+
+	<div class="content">
+		<p>
+			<e on="makeTextRed" do="addClass">red</e>
+			Этот текст должен стать красным после нажатия на ссылку
+		</p>
+		<p>
+			<a href="#">
+				<handler on="click">
+					<dispatch e="makeTextRed" f="body"></dispatch>
+				</handler>
+				Сделать текст красным
+			</a>
+		</p>
+	</div>
+
+<code class="html"><span class="tag">&lt;p&gt;</span>
+  <span class="comment">&lt;!-- 
+  Устанавливаем z-обработчик тегу &lt;p&gt; 
+  По событию "makeTextRed" необходимо вызвать "addClass"
+  и в качестве параметра передать имя класса "red" 
+  --&gt</span>
+  <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;<span class="txt">red</span>&lt;/e&gt;</span>
+  <span class="txt">Этот текст должен стать красным после нажатия на ссылку</span>
+<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;
+  &lt;a href="#"&gt;
+    <span class="comment">&lt;!-- Тегу &lt;a&gt; устанавливаем DOM-обработчик "click" --&gt</span>
+    <span class="zTag">&lt;handler on=<span class="attrVal">"click"</span>&gt;
+      <span class="comment">&lt;!-- 
+      Запускаем событие "makeTextRed" 
+      начиная от &lt;body&gt; (f[rom]="body")
+      (иначе событие распространялость бы от тега &lt;a&gt;)
+      --&gt</span>
+      &lt;dispatch e=<span class="attrVal">"makeTextRed"</span> f=<span class="attrVal">"body"</span>&gt;&lt;/dispatch&gt;
+    &lt;/handler&gt;</span>
+    <span class="txt">Сделать текст красным</span>
+  &lt;/a&gt;
+&lt;/p&gt;  
+</span>
+</code>	
+
+</body>
+</html>
