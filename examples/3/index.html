@@ -1,0 +1,185 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Локализация распространения событий</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	
+	<style type="text/css">
+		.red { color: #e74c3c }
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Локализация распространения событий</h1>
+
+	<div class="content">
+		<p class="pMarker">
+			<e on="makeTextRed" do="addClass">red</e>
+			<e on="clear" do="removeClass">red</e>
+			Параграф 
+			<b class="bMarker">
+				<e on="makeTextRed" do="addClass">red</e>
+				<e on="clear" do="removeClass">red</e>
+				1
+			</b>
+		</p>
+		<p class="pMarker">
+			<e on="makeTextRed" do="addClass">red</e>
+			<e on="clear" do="removeClass">red</e>
+			Параграф
+			<b class="bMarker">
+				<e on="makeTextRed" do="addClass">red</e>
+				<e on="clear" do="removeClass">red</e>
+				2
+			</b>
+		</p>
+		<ul>
+			<li class="liMarker">
+				<e on="makeTextRed" do="addClass">red</e>
+				<e on="clear" do="removeClass">red</e>
+				Элемент списка
+				<b class="bMarker">
+					<e on="makeTextRed" do="addClass">red</e>
+					<e on="clear" do="removeClass">red</e>
+					1
+				</b>
+			</li>
+			<li class="liMarker">
+				<e on="makeTextRed" do="addClass">red</e>
+				<e on="clear" do="removeClass">red</e>
+				Элемент списка
+				<b class="bMarker">
+					<e on="makeTextRed" do="addClass">red</e>
+					<e on="clear" do="removeClass">red</e>
+					2
+				</b>
+			</li>
+		</ul>
+		<p>
+			Раскрасить
+			<a href="#">
+				<handler on="click">
+					<dispatch e="makeTextRed" f="body" p="b"></dispatch>
+				</handler>
+				&lt;b&gt;
+			</a>
+			или
+			<a href="#">
+				<handler on="click">
+					<dispatch e="makeTextRed" f="body" p="li"></dispatch>
+				</handler>
+				&lt;li&gt;
+			</a>
+			или
+			<a href="#">
+				<handler on="click">
+					<dispatch e="makeTextRed" f="body" p="p"></dispatch>
+				</handler>
+				&lt;p&gt;
+			</a>
+			или
+			<a href="#">
+				<handler on="click">
+					<dispatch e="clear" f="body"></dispatch>
+				</handler>
+				отменить раскраску
+			</a>
+		</p>
+	</div>
+
+<code class="html"><span class="tag">&lt;p&gt;
+  <span class="comment">&lt;!-- 
+  Устанавливаем 2 z-обработчика 
+  По событию "makeTextRed" установим элементу класс "red"
+  а по "clear" - удалим его
+  --&gt</span>
+  <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+  &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+  <span class="txt">Параграф</span>
+  &lt;b&gt;
+    <span class="comment">&lt;!-- Z-обработчики для всех тегов будут одинаковыми --&gt</span>
+    <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+    &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+    <span class="txt">1</span>
+  &lt;/b&gt;
+&lt;/p&gt;
+&lt;p&gt;
+  <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+  &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+  <span class="txt">Параграф</span>
+  &lt;b&gt;
+    <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+    &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+    <span class="txt">2</span>
+  &lt;/b&gt;
+&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;
+    <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+    &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+    <span class="txt">Элемент списка</span>
+    &lt;b&gt;
+      <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+      &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+      <span class="txt">1</span>
+    &lt;/b&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+    &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+    <span class="txt">Элемент списка</span>
+    &lt;b&gt;
+      <span class="zTag">&lt;e on=<span class="attrVal">"makeTextRed"</span> do=<span class="attrVal">"addClass"</span>&gt;red&lt;/e&gt;
+      &lt;e on=<span class="attrVal">"clear"</span> do=<span class="attrVal">"removeClass"</span>&gt;red&lt;/e&gt;</span>
+      <span class="txt">2</span>
+    &lt;/b&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;
+  <span class="txt">Раскрасить</span>
+  &lt;a href="#"&gt;
+    <span class="zTag">&lt;handler on=<span class="attrVal">"click"</span>&gt;
+      <span class="comment">&lt;!-- 
+      Запускаем событие "makeTextRed" 
+      начиная от &lt;body&gt
+      и распространяем его только на &lt;b&gt;
+      --&gt</span>
+      &lt;dispatch e=<span class="attrVal">"makeTextRed"</span> f="<span class="attrVal">body"</span> p=<span class="attrVal">"b"</span>&gt;&lt;/dispatch&gt;
+    &lt;/handler&gt;</span>
+    <span class="txt">&lt;b&gt;</span>
+  &lt;/a&gt;
+  <span class="txt">или</span>
+  &lt;a href="#"&gt;
+    <span class="zTag">&lt;handler on=<span class="attrVal">"click"</span>&gt;
+      <span class="comment">&lt;!-- Распространяем событие только на &lt;li&gt; --&gt</span>
+      &lt;dispatch e=<span class="attrVal">"makeTextRed"</span> f="<span class="attrVal">body"</span> p=<span class="attrVal">"li"</span>&gt;&lt;/dispatch&gt;
+    &lt;/handler&gt;</span>
+    <span class="txt">&lt;li&gt;</span>
+  &lt;/a&gt;
+  <span class="txt">или</span>
+  &lt;a href="#"&gt;
+    <span class="zTag">&lt;handler on=<span class="attrVal">"click"</span>&gt;
+      <span class="comment">&lt;!-- И только на &lt;p&gt; --&gt</span>
+      &lt;dispatch e=<span class="attrVal">"makeTextRed"</span> f="<span class="attrVal">body"</span> p=<span class="attrVal">"p"</span>&gt;&lt;/dispatch&gt;
+    &lt;/handler&gt;</span>
+    <span class="txt">&lt;p&gt;</span>
+  &lt;/a&gt;
+  <span class="txt">или</span>
+  &lt;a href="#"&gt;
+    <span class="zTag">&lt;handler on=<span class="attrVal">"click"</span>&gt;
+      <span class="comment">&lt;!-- 
+      Запускаем событие очистки "clear" 
+      для всех элементов сразу
+      --&gt</span>
+      &lt;dispatch e=<span class="attrVal">"clear"</span> f=<span class="attrVal">"body"</span>&gt;&lt;/dispatch&gt;
+    &lt;/handler&gt;</span>
+    <span class="txt">отменить раскраску</span>
+  &lt;/a&gt;
+&lt;/p&gt;</span>
+</code>	
+
+</body>
+</html>

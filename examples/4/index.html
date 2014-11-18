@@ -1,0 +1,229 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Темплейтирование</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	
+	<style type="text/css">
+		.tabContainer
+		{
+			display: flex;
+			flex-flow: row wrap;
+		}
+		.tab
+		{
+			display: inline-block;
+			padding: 10px 20px;
+			text-transform: uppercase;
+			font-size: 10pt;
+		}
+		.tab.active
+		{
+			background-color: #bdc3c7;
+			font-weight: bold;
+		}
+		.tabContent
+		{
+			flex: 1 1 100%;
+			order: 2;
+			background: #bdc3c7;
+			padding: 20px;
+			color: #2c3e50;
+			display: none;
+		}
+		.tab.active + .tabContent
+		{
+			display: block;
+		}
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Темплейтирование</h1>
+
+	<div class="content">
+		<e on="init" do="template">tabContentTpl</e>
+		<exec>
+			<dispatch e="init">
+				{
+					"tabs": 
+						[
+							{
+								"id": "fruit",
+								"name": "Фрукты",
+								"values": [ "Яблоки", "Сливы", "Апельсины" ]
+							},
+							{
+								"id": "vegetables",
+								"name": "Овощи",
+								"values": [ "Капуста", "Горох", "Морковь", "Тыква" ]
+							},
+							{
+								"id": "something",
+								"name": "Нечто"
+							}
+						]
+				}
+			</dispatch>
+		</exec>
+	</div>
+
+	<template id="zTemplates">
+		<template id="tabContentTpl">
+			<div class="tabContainer">
+				<dispatch id="tabActivator" e="tabActivate" p="childNodes"></dispatch>
+				<foreach from="tabs" item="tab">
+					<a href="#" class="tab">
+						<e on="tabActivate" do="addClassIfAttrMatch">active,data-id</e>
+						<attr name="data-id"><value>tab.id</value></attr>
+						<handler on="click">
+							<dispatch use="tabActivator">{ "<value>tab.id</value>": 1 }</dispatch>
+						</handler>
+						<value>tab.name</value>
+					</a>
+					<div class="tabContent">
+						<include tpl="listTpl"><value>JSON.stringify(tab)</value></include>
+					</div>
+				</foreach>
+				<exec>
+					<dispatch use="tabActivator">{ "<value>tabs[0].id</value>": 1 }</dispatch>
+				</exec>
+			</div>
+		</template>
+		<template id="listTpl">
+			<if expr="values.length">
+				<then>
+					<ul>
+						<foreach from="values" item="item">
+							<li><value>item</value></li>
+						</foreach>
+					</ul>
+				</then>
+				<else>
+					<p>Извините, тут пусто.</p>
+				</else>
+			</if>
+		</template>
+	</template>
+
+<code class="html"><span class="tag">&lt;div class="content"&gt;</span>
+  <span class="comment">&lt;!--
+  Устанавливаем контейнеру обработчик события "init".
+  Он будет темплейтировать данные, которые придут
+  вместе с событием
+  В качестве шаблона будет взят template#tabContentTpl
+  --&gt;</span>
+  <span class="zTag">&lt;e on=<span class="attrVal">"init"</span> do=<span class="attrVal">"template"</span>&gt;<span class="txt">tabContentTpl</span>&lt;/e&gt;
+  <span class="comment">&lt;!-- Делаем вызов инструкций --&gt;</span>
+  &lt;exec&gt;
+    <span class="comment">&lt;!--
+    Запускаем событие "init", которому устанавливаем 
+    JSON-объект в качестве данных
+    --&gt;</span>
+    &lt;dispatch e=<span class="attrVal">"init"</span>&gt;
+      <span class="txt">{
+        "tabs": 
+          [
+            {
+              "id": "fruit",
+              "name": "Фрукты",
+              "values": [ "Яблоки", "Сливы", "Апельсины" ]
+            },
+            {
+              "id": "vegetables",
+              "name": "Овощи",
+              "values": [ "Капуста", "Горох", "Морковь", "Тыква" ]
+            },
+            {
+              "id": "something",
+              "name": "Нечто"
+            }
+          ]                      	
+      }</span>
+    &lt;/dispatch&gt;
+  &lt;/exec&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="comment">&lt;!-- Все темплейты должны находиться в данном контейнере --&gt;</span>
+<span class="tag">&lt;template id=<span class="attrVal">"zTemplates"</span>&gt;
+  <span class="comment">&lt;!-- Темплейт для отображения табов --&gt;</span>
+  &lt;template id=<span class="attrVal">"tabContentTpl"</span>&gt;
+    &lt;div class="tabContainer"&gt;</span>
+      <span class="comment">&lt;!-- 
+      Этот диспатчер будет запускать событие "tabActivate",
+      которое будет распростаняться от контейнера div.tabContainer
+      только на прямых потомков
+      --&gt;</span>
+      <span class="zTag">&lt;dispatch id=<span class="attrVal">"tabActivator"</span> e=<span class="attrVal">"tabActivate"</span> p=<span class="attrVal">"childNodes"</span>&gt;&lt;/dispatch&gt;
+      <span class="comment">&lt;!-- Итерируем пришедшие с событием "init" данные.--&gt;</span>
+      &lt;foreach from=<span class="attrVal">"tabs"</span> item=<span class="attrVal">"tab"</span>&gt;</span>
+        <span class="tag">&lt;a href="#" class="tab"&gt;</span>
+          <span class="comment">&lt;!-- 
+          Устанавливаем тегу &lt;a&gt; обработчик события "tabActivate"
+          по которому будем устанавливать класс "active"
+          если в пришедших с событием данных 
+          будет присутствовать ключ, название которого
+          будет совпадать со значением атрибута "data-id"
+          --&gt;</span>
+          <span class="zTag">&lt;e on=<span class="attrVal">"tabActivate"</span> do=<span class="attrVal">"addClassIfAttrMatch"</span>&gt;<span class="txt">active,data-id</span>&lt;/e&gt;
+          <span class="comment">&lt;!-- 
+          Устанавливаем тегу &lt;a&gt; атрибут "data-id"
+          который равен "tab.id"
+          --&gt;</span>
+          &lt;attr name=<span class="attrVal">"data-id"</span>&gt;&lt;value&gt;<span class="txt">tab.id</span>&lt;/value&gt;&lt;/attr&gt;
+          <span class="comment">&lt;!-- 
+          Устанавливаем тегу &lt;a&gt; обработчик
+          DOM-события "click"
+          --&gt;</span>
+          &lt;handler on=<span class="attrVal">"click"</span>&gt;
+            <span class="comment">&lt;!-- 
+            По которому будем запускать диспатчер с id 
+            равным "tabActivator" (описан выше), 
+            а в качестве параметров передадим JSON-объект
+            --&gt;</span>
+            &lt;dispatch use=<span class="attrVal">"tabActivator"</span>&gt;<span class="txt">{ "<span class="zTag">&lt;value&gt;</span>tab.id<span class="zTag">&lt;/value&gt;</span>": 1 }</span>&lt;/dispatch&gt;
+          &lt;/handler&gt;
+          <span class="comment">&lt;!-- Выводим название таба --&gt;</span>
+          &lt;value&gt;<span class="txt">tab.name</span>&lt;/value&gt;</span>
+        <span class="tag">&lt;/a&gt;
+        &lt;div class="tabContent"&gt;</span>
+          <span class="comment">&lt;!-- 
+          Подключаем темплейт template#listTpl,
+          в который передадим данные таба
+          --&gt;</span>
+          <span class="zTag">&lt;include tpl=<span class="attrVal">"listTpl"</span>&gt;&lt;value&gt;<span class="txt">JSON.stringify(tab)</span>&lt;/value&gt;&lt;/include&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+      <span class="zTag">&lt;/foreach&gt;
+      &lt;exec&gt;
+        <span class="comment">&lt;!-- 
+        Активируем таб путем запуска события "tabActivator",
+        которому передадим в качестве параметра id первого таба
+        --&gt;</span>
+        &lt;dispatch use=<span class="attrVal">"tabActivator"</span>&gt;<span class="txt">{ "<span class="zTag">&lt;value&gt;</span>tabs[0].id<span class="zTag">&lt;/value&gt;</span>": 1 }</span>&lt;/dispatch&gt;
+      &lt;/exec&gt;</span>
+    <span class="tag">&lt;/div&gt;
+  &lt;/template&gt;
+  &lt;template id=<span class="attrVal">"listTpl"</span>&gt;</span>
+    <span class="comment">&lt;!-- Если массив "values" не пустой --&gt;</span>
+    <span class="zTag">&lt;if expr=<span class="attrVal">"values.length"</span>&gt;
+      <span class="comment">&lt;!-- выводим его значения --&gt;</span>
+      &lt;then&gt;</span>
+        <span class="tag">&lt;ul&gt;</span>
+          <span class="zTag">&lt;foreach from=<span class="attrVal">"values"</span> item=<span class="attrVal">"item"</span>&gt;</span>
+            <span class="tag">&lt;li&gt;<span class="zTag">&lt;value&gt;<span class="txt">item</span>&lt;/value&gt;</span>&lt;/li&gt;</span>
+          <span class="zTag">&lt;/foreach&gt;</span>
+        <span class="tag">&lt;/ul&gt;</span>
+      <span class="zTag">&lt;/then&gt;
+      <span class="comment">&lt;!-- иначе выводим сообщение --&gt;</span>
+      &lt;else&gt;</span>
+        <span class="tag">&lt;p&gt;Извините, тут пусто.&lt;/p&gt;</span>
+      <span class="zTag">&lt;/else&gt;
+    &lt;/if&gt;</span>
+  <span class="tag">&lt;/template&gt;
+&lt;/template&gt;</span>
+</code>	
+
+</body>
+</html>
