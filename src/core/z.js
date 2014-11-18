@@ -267,14 +267,14 @@ var z = (function(){
 		try {
 
 			var 
-				DOMEvent = (arguments[1] && arguments[1] instanceof window.Event )? arguments[1] : null,
+				DOMEvnt = ( arguments[1] && isDOMEvent(arguments[1]) )? arguments[1] : null,
 				l = arguments.length
 			;
 
-			if (DOMEvent !== null) {
+			if (DOMEvnt !== null) {
 				l--;
-				DOMEvent.preventDefault(true);
-				DOMEvent.stopPropagation(true);
+				DOMEvnt.preventDefault(true);
+				DOMEvnt.stopPropagation(true);
 			}
 
 			var argArray = Array.prototype.slice.call(arguments,0,l);
@@ -319,7 +319,7 @@ var z = (function(){
 
 					if ( !parentNode ) continue;
 		
-					arg.DOMEvent = DOMEvent;
+					arg.DOMEvnt = DOMEvnt;
 
 					if ( !broadcast ) dispatchEvent( parentNode, arg );
 
@@ -750,11 +750,11 @@ var z = (function(){
 		globals.appendChild( shadowNode );
 	};
 
-	var handlerWithKeyLimits = function ( handler, keys, DOMEvent ) {
+	var handlerWithKeyLimits = function ( handler, keys, DOMEvnt ) {
 		var 
 			keyArr = keys.split(","),
-			eType = DOMEvent.type,
-			keyCode = DOMEvent.keyCode,
+			eType = DOMEvnt.type,
+			keyCode = DOMEvnt.keyCode,
 			acceptedKeys = []
 		;
 
@@ -777,7 +777,7 @@ var z = (function(){
 
 		for ( var i=keyArr.length; i--; ) {
 			if ( keyArr[i] === keyAlias ) {
-				handler( DOMEvent );
+				handler( DOMEvnt );
 				return;
 			}
 		}
@@ -853,6 +853,14 @@ var z = (function(){
 			};
 		}
 		return res;	
+	};
+
+	var isDOMEvent = function ( DOMEvnt ) {
+
+		try {
+			return ( DOMEvnt instanceof window.Event || DOMEvnt instanceof templates.defaultView.Event );
+		} catch ( e ) { return false }
+
 	};
 
 	document.addEventListener("DOMContentLoaded", function(event) { z.init() });
