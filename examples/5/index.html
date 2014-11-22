@@ -1,0 +1,185 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Формы множеств</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	<style type="text/css">
+		.hl {color: #1abc9c}
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Формы множеств</h1>
+
+	<div class="content">
+		<e on="init" do="template">listTpl</e>
+		<exec>
+			<dispatch e="init">
+				{
+					"kids": 
+						[
+							{
+								"name": "Маша",
+								"sex": 0,
+								"eats":
+									{
+										"apples": 11
+									}
+							},
+							{
+								"name": "Настя",
+								"sex": 0,
+								"eats":
+									{
+										"apples": 5,
+										"bananas": 2
+									}
+							},
+							{
+								"name": "Тарас",
+								"sex": 1,
+								"eats":
+									{
+										"borsch": 1
+									}
+							}
+						]
+				}
+			</dispatch>
+		</exec>
+	</div>
+
+	<template id="zTemplates">
+		<template id="listTpl">
+			<ul>
+				<foreach from="kids" item="kid">
+					<li>
+						<value>kid.name</value> 
+						<value>"eats"^kid.sex^1</value>
+						<foreach from="kid.eats" item="amount" key="food">
+							<capture to="txt">
+								<span class="hl"><value>amount</value></span> <value>food^amount^7</value>
+							</capture>
+						</foreach>
+						<flush>txt.join(", ")</flush>
+					</li>
+				</foreach>
+			</ul>
+		</template>
+		<plurals rule="7">
+			{
+				"apples": [ "яблоко", "яблока", "яблок" ],
+				"bananas": [ "банан", "банана", "бананов" ],
+				"borsch": [ "тарелку борща", "тарелки борща", "тарелок борща" ]
+			}
+		</plurals>
+		<plurals rule="1">
+			{
+				"eats": [ "съел", "съела" ]
+			}
+		</plurals>
+	</template>
+
+<code class="html"><span class="tag">&lt;div class="content"&gt;</span>
+  <span class="comment">&lt;!-- Темплейтируем данные --&gt;</span>
+  <span class="zTag">&lt;e on=<span class="attrVal">"init"</span> do=<span class="attrVal">"template"</span>&gt;listTpl&lt;/e&gt;
+  &lt;exec&gt;
+    &lt;dispatch e=<span class="attrVal">"init"</span>&gt;<span class="txt">
+      {
+        "kids": 
+          [
+            {
+              "name": "Маша",
+              "sex": 0,
+              "eats":
+                {
+                  "apples": 11
+                }
+            },
+            {
+              "name": "Настя",
+              "sex": 0,
+              "eats":
+                {
+                  "apples": 5,
+                  "bananas": 2
+                }
+            },
+            {
+              "name": "Тарас",
+              "sex": 1,
+              "eats":
+                {
+                  "borsch": 1
+                }
+            }
+          ]
+      }</span>
+    &lt;/dispatch&gt;
+  &lt;/exec&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="zTag">&lt;template id=<span class="attrVal">"zTemplates"</span>&gt;
+  &lt;template id=<span class="attrVal">"listTpl"</span>&gt;</span>
+    <span class="tag">&lt;ul&gt;</span>
+    <span class="comment">&lt;!-- Перебираем элементы массива "kids"--&gt;</span>
+      <span class="zTag">&lt;foreach from=<span class="attrVal">"kids"</span> item=<span class="attrVal">"kid"</span>&gt;</span>
+        <span class="tag">&lt;li&gt;</span>
+          <span class="comment">&lt;!-- Выводим имя --&gt;</span>
+          <span class="zTag">&lt;value&gt;<span class="txt">kid.name</span>&lt;/value&gt;
+          <span class="comment">&lt;!-- 
+          Тут мы хитрим. Мы будем использовать формы множеств
+          английского языка для определения подходящего глагола
+          для разных полов.
+          Первый параметр ("eats") будет ключом в таблице форм 
+          множеств, второй - количеством, третий указывает на 
+          правило, которое будет использовано для нахождения
+          нужной формы множеств.
+          --&gt;</span>
+          &lt;value&gt;<span class="txt">"eats"^kid.sex^1</span>&lt;/value&gt;
+          <span class="comment">&lt;!-- Перебираем массив "eats" --&gt;</span>
+          &lt;foreach from=<span class="attrVal">"kid.eats"</span> item=<span class="attrVal">"amount"</span> key=<span class="attrVal">"food"</span>&gt;
+            <span class="comment">&lt;!-- 
+            Запоминаем контент в переменную "txt". 
+            Эта переменная локальна исключительно для тега &lt;li&gt;
+            --&gt;</span>
+            &lt;capture to=<span class="attrVal">"txt"</span>&gt;</span>
+              <span class="comment">&lt;!-- 
+              Выводим количество и правильную форму множеств.
+              Ключи форм множеств берутся из названия ключа объекта
+              с данными
+              --&gt;</span>
+              <span class="tag">&lt;span class="hl"&gt;<span class="zTag">&lt;value&gt;<span class="txt">amount</span>&lt;/value&gt;</span>&lt;/span&gt;</span> <span class="zTag">&lt;value&gt;<span class="txt">food^amount^7</span>&lt;/value&gt;</span>
+            <span class="zTag">&lt;/capture&gt;
+          &lt;/foreach&gt;
+          <span class="comment">&lt;!-- Вставляем контент, который мы запоминали раннее --&gt;</span>
+          &lt;flush&gt;<span class="txt">txt.join(", ")</span>&lt;/flush&gt;</span>
+        <span class="tag">&lt;/li&gt;</span>
+      <span class="zTag">&lt;/foreach&gt;</span>
+    <span class="tag">&lt;/ul&gt;</span>
+  <span class="zTag">&lt;/template&gt;
+  <span class="comment">&lt;!--
+  Описываем ключи и значения для обычного контента
+  --&gt;</span>
+  &lt;plurals rule=<span class="attrVal">"7"</span>&gt;<span class="txt">
+    {
+      "apples": [ "яблоко", "яблока", "яблок" ],
+      "bananas": [ "банан", "банана", "бананов" ],
+      "borsch": [ "тарелку борща", "тарелки борща", "тарелок борща" ]
+    }</span>
+  &lt;/plurals&gt;
+  <span class="comment">&lt;!--
+  и для хитрого варианта с определением пола
+  --&gt;</span>
+  &lt;plurals rule=<span class="attrVal">"1"</span>&gt;<span class="txt">
+    {
+      "eats": [ "съел", "съела" ]
+    }</span>
+  &lt;/plurals&gt;
+&lt;/template&gt;</span>
+</code>	
+
+</body>
+</html>
