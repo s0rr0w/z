@@ -9,6 +9,8 @@
 	<style type="text/css">
 		.tabContainer
 		{
+			display: -webkit-flex;
+			-webkit-flex-flow: row wrap;
 			display: flex;
 			flex-flow: row wrap;
 		}
@@ -26,6 +28,8 @@
 		}
 		.tabContent
 		{
+			-webkit-flex: 1 1 100%;
+			-webkit-order: 2;
 			flex: 1 1 100%;
 			order: 2;
 			background: #bdc3c7;
