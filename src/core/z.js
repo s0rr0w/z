@@ -1,4 +1,7 @@
-/* Code is available under the Piblic Domain (Unlicense) */
+/*
+Z (zet) framework, version 0.1 
+Code is available under the Piblic Domain (Unlicense) 
+*/
 
 var z = (function(){
 
@@ -185,6 +188,7 @@ var z = (function(){
 				childNodes = node.childNodes,
 				onAttr = node.getAttribute("on"),
 				keys = node.getAttribute("keys"),
+				confirmMsg = node.getAttribute("confirm"),
 				parentNode = node.parentNode,
 				targetNode = parentNode
 			;
@@ -205,6 +209,7 @@ var z = (function(){
 						if ( keys ) {
 							tmpFunc = handlerWithKeyLimits.bind( this, tmpFunc, keys );
 						}
+						if ( confirmMsg ) tmpFunc = handlerWithConfirm.bind( this, tmpFunc, confirmMsg );
 						targetNode.addEventListener( onAttr, tmpFunc, false );
 						break;
 				}
@@ -248,7 +253,7 @@ var z = (function(){
 
 				var jsonObj = JSON.parse( jsonStr );
 
-				for ( var pKey in jsonObj ) {console.log(pKey)
+				for ( var pKey in jsonObj ) {
 					if ( ! jsonObj.hasOwnProperty( pKey ) ) continue;
 					plurals[rule][pKey] = jsonObj[pKey];
 				}
@@ -501,10 +506,11 @@ var z = (function(){
 
 					var 
 						exprAttr = childNode.getAttribute("expr"),
-						exprFunc = new Function ( "data", "with(data){ try { return !!(" + exprAttr + ")} catch(e) { return false } }" )
+						captures = container._captures_ || {},
+						exprFunc = new Function ( "_data_", "_captures_", "with(_data_){ try { return !!(" + exprAttr + ")} catch(e) { return false } }" )
 					;
 
-					if (exprFunc(data)) {
+					if (exprFunc(data, captures)) {
 						var thenNode = getChildByName.call( childNode, "then" );
 						if ( !thenNode ) break;
 						iterateTemplate( thenNode, container, data );
@@ -518,13 +524,13 @@ var z = (function(){
 					break;
 
 				case "value":
-					var 
+					var
 						defaultVal = childNode.getAttribute("default") || null,
 						expr = childNode.textContent,
 						exprArr = expr.split("^"),
 						retFunc = new Function ( "data", "with(data){ try { return " + exprArr[0] + " } catch (e) { return '' } }" ),
 						res = retFunc(data),
-						res = (res === "" && defaultVal !== null )? defaultVal : res,
+						res = ((res === "" || res === undefined) && defaultVal !== null )? defaultVal : res,
 						tmpNode = document.createTextNode(res)
 					;
 					if ( exprArr.length > 1 ) {
@@ -538,10 +544,23 @@ var z = (function(){
 					container.appendChild( tmpNode );
 					break;
 
+				case "val_by":
+					var 
+						defaultVal = childNode.getAttribute("default") || null,
+						expr = childNode.textContent,
+						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
+						res = retFunc(data),
+						retFunc = new Function ( "data", "with(data){ try { return " + res + " } catch (e) { return '' } }" ),
+						res = retFunc(data),
+						res = ((res === "" || res === undefined) && defaultVal !== null )? defaultVal : res,
+						tmpNode = document.createTextNode(res)
+					;
+					container.appendChild( tmpNode );
+					break;
+
 				case "include":
 					var 
 						tplId = childNode.getAttribute("tpl"),
-						mode = childNode.getAttribute("mode"),
 						tmpFragment = document.createDocumentFragment()
 					;
 
@@ -550,10 +569,12 @@ var z = (function(){
 					var 
 						expr = tmpFragment.textContent.trim(),
 						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
-						res = retFunc(data)
+						res = retFunc(data) || data,
+						tplNode = $tpl(tplId),
+						tmpFragment = document.createDocumentFragment()
 					;
 
-					z.template ( { c: container, data: res }, [ tplId, mode ] );
+					iterateTemplate( tplNode, container, res );
 
 					break;
 
@@ -588,12 +609,13 @@ var z = (function(){
 
 					var 
 						nameAttr = childNode.getAttribute("name"),
-						tmpFragment = document.createDocumentFragment();
+						tmpFragment = document.createDocumentFragment(),
+						targetNode = ( container.nodeName.toUpperCase() === "WRAPPER" )? container.getElementsByTagName("*").item(0) : container
 					;
 
 					if ( container._captures_ ) tmpFragment._captures_ = container._captures_;
 					iterateTemplate( childNode, tmpFragment, data );
-					container.setAttribute( nameAttr, tmpFragment.textContent.trim() );
+					targetNode.setAttribute( nameAttr, tmpFragment.textContent.trim() );
 
 					break;
 
@@ -657,23 +679,24 @@ var z = (function(){
 					break;
 
 				case "flush":
-					var 
+					var
 						expr = childNode.textContent,
 						captureObj = container._captures_ || {},
 						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
 						res = retFunc(captureObj)
 					;
-						if ( container.innerHTML ) {
-							container.innerHTML += res;
+
+					if ( container.innerHTML ) {
+						container.innerHTML += res;
+					}
+					else
+					{
+						var tmpElement = document.createElement("div");
+						tmpElement.innerHTML = res;
+						for ( var i=0, l=tmpElement.childNodes.length; i<l; i++ ) {
+							container.appendChild(tmpElement.childNodes.item(i));
 						}
-						else
-						{
-							var tmpElement = document.createElement("div");
-							tmpElement.innerHTML = res;
-							for ( var i=0, l=tmpElement.childNodes.length; i<l; i++ ) {
-								container.appendChild(tmpElement.childNodes.item(i));
-							}
-						}
+					}
 
 					break;
 
@@ -687,6 +710,9 @@ var z = (function(){
 				case "z:tr":
 				case "z:td":
 				case "z:th":
+				case "z:select":
+				case "z:option":
+				case "z:textarea":
 					var tmpName = nodeName.substr(2);
 					var tmpNode = document.createElement( tmpName );
 					cloneAttributes(childNode, tmpNode);
@@ -793,6 +819,16 @@ var z = (function(){
 			}
 		}
 	};
+	var handlerWithConfirm = function ( handler, confirmMsg, DOMEvnt ) {
+		if ( confirm(confirmMsg) ) {
+			handler( DOMEvnt );
+		}
+		else
+		{
+			DOMEvnt.preventDefault(true);
+			DOMEvnt.stopPropagation(true);
+		};
+	};
 
 	var getPluralText = function ( type, key, value ) {
 
@@ -862,7 +898,7 @@ z.addHandler( "templateIfMatch", function ( e, data ) {
 	var
 		property = data[0],
 		constant = data[1],
-		options = data.splice(2)
+		options = data.slice(2)
 	;
 
 	if ( e.data[property] != constant ) return;
@@ -870,6 +906,20 @@ z.addHandler( "templateIfMatch", function ( e, data ) {
 	e.c = this;
 	z.template( e, options );
 	
+});
+z.addHandler( "templateIfAttrMatch", function ( e, data ) {
+
+	var
+		property = data[0],
+		value = this.getAttribute(property),
+		options = data.slice(1)
+	;
+
+	if ( e.data[property] != value ) return;
+
+	e.c = this;
+	z.template( e, options );
+
 });
 z.addHandler( "templateIfExists", function ( e, data ) {
 
@@ -882,6 +932,27 @@ z.addHandler( "templateIfExists", function ( e, data ) {
 
 	e.c = this;
 	z.template( e, options );
+
+});
+z.addHandler( "templateScopeIfExists", function ( e, data ) {
+
+	var
+		property = data[0],
+		options = data.slice(1)
+	;
+
+	if ( e.data[property] === undefined ) return;
+
+	var
+		localDataObj = Object.create(e.data[property]),
+		eventClone = Object.create(e)
+	;
+
+	eventClone.c = this;
+	eventClone.data = {};
+	eventClone.data[property] = localDataObj;
+
+	z.template( eventClone, options );
 
 });
 z.addHandler( "templateOnce", function ( e, data ) {
