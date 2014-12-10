@@ -112,7 +112,7 @@ var z = (function(){
 				node = eList[i],
 				eventName = node.getAttribute("on"),
 				handler = node.getAttribute("do"),
-				isGlobal = node.hasAttribute("global")
+				isGlobal = !!node.hasAttribute("global")
 			;
 
 			if ( !eventName || !handler ) continue;
@@ -132,7 +132,7 @@ var z = (function(){
 
 			if ( !eObj[eventName] ) eObj[eventName] = [];
 
-			eObj[eventName].push( { h: handler, p: params } );
+			eObj[eventName].push( { h: handler, p: params, global: isGlobal } );
 
 			if ( isGlobal && eObj[eventName].global === undefined ) {
 				eObj[eventName].global = true;
@@ -287,8 +287,8 @@ var z = (function(){
 				var 
 					arg = arguments[i],
 					eventName = arg.e,
-					target = arg.t,
-					parentNode = arg.f,
+					target = arg.t || null,
+					parentNode = arg.f || document.body,
 					propagation = arg.p || "*",
 					broadcast = !!arg.b,
 					isGlobal = ( propagation === "global" )
@@ -309,7 +309,7 @@ var z = (function(){
 						if ( !targetNode ) continue;
 
 						if ( document.body.contains(targetNode) ) {
-							dispatchEvent( targetNode, arg );
+							dispatchEvent( targetNode, arg, true );
 						}
 						else
 						{
@@ -355,7 +355,11 @@ var z = (function(){
 
 	var dispatchEvent = function ( node, event ) {
 
-		var eventName = event.e;
+		var 
+			eventName = event.e,
+			isGlobal = arguments[2] || false
+		;
+
 		if ( !node._e_ || !node._e_[eventName] ) return;
 
 		var handlersList = node._e_[eventName];
@@ -363,11 +367,14 @@ var z = (function(){
 		for ( var i=0, l=handlersList.length; i<l; i++ ) {
 			var hObj = handlersList[i];
 
+			if ( isGlobal ^ hObj.global ) continue;
+			
 			if ( handlers[hObj.h] && handlers[hObj.h] instanceof Function ) 
 				try {
 					handlers[hObj.h].call( node, event, hObj.p );
 				} catch ( e ) { } 
 		};
+
 	};
 
 	var dispatchById = function ( nodeID, mixin ) {
