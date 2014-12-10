@@ -1,0 +1,270 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Z :: Интерактивный пример</title>
+	<script type="text/javascript" src="../../src/core/z.js"></script>
+	<script type="text/javascript" src="../../src/ext/z_handlers.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/main.css">
+	<style type="text/css">
+		.hiddenBlock {display: none}
+	</style>
+
+</head>
+<body>
+	<a href="../index.html" class="backLink" title="Назад">&laquo;</a>
+	<h1>Интерактивный пример</h1>
+
+	<div class="content">
+		<p>Данный пример показывает, как оперировать контейнером начала распространения события и зонами видимости</p>
+		<p>Диспатчеры интерактивные, можно смело тыкать в них палочкой</p>
+	</div>
+
+	<!--div class="content">
+		<exec>
+			< !-- 
+			Простые примеры. 
+			Контейнер начала распространения события: div.content
+			-- >
+			<dispatch e="test"></dispatch>
+			<dispatch e="test" p="global"></dispatch>
+			<dispatch e="test" p="parent"></dispatch>
+			<dispatch e="test" p="childNodes"></dispatch>
+			<dispatch e="test" p="childNodes,b,.special"></dispatch>
+		</exec>
+
+		<e on="test" do="debug"></e>
+		<div class="container_1">
+			<e on="test" do="debug"></e>
+			<ul>
+				<e on="test" do="debug"></e>
+				<li>
+					<e on="test" do="debug"></e>
+					<b>
+						<e on="test" do="debug"></e>
+						<e global on="test" do="debug"></e>
+					</b>
+				</li>
+				<li class="special">
+					<e on="test" do="debug"></e>
+					<ul>
+						<e on="test" do="debug"></e>
+						<li>
+							<e on="test" do="debug"></e>
+							<b>
+								<e on="test" do="debug"></e>
+							</b>
+						</li>
+						<exec>
+							< !-- 
+							Контейнером начала распространения события сделаем
+							родителя с классом .special
+							-- >
+							<dispatch e="test" f=".special"></dispatch>
+							<dispatch e="test" f=".special" p="global"></dispatch>
+							<dispatch e="test" f=".special" p="parent"></dispatch>
+							<dispatch e="test" f=".special" p="childNodes"></dispatch>
+							<dispatch e="test" f=".special" p="childNodes,b,.special"></dispatch>
+						</exec>
+					</ul>
+				</li>
+				<li>
+					<e on="test" do="debug"></e>
+				</li>
+			</ul>
+		</div>
+		<exec>
+			< !-- 
+			Сделаем началом распространения события контейнер #listItem
+			-- >
+			<dispatch e="test" f="#listItem"></dispatch>
+			<dispatch e="test" f="#listItem" p="global"></dispatch>
+			<dispatch e="test" f="#listItem" p="parent"></dispatch>
+			<dispatch e="test" f="#listItem" p="childNodes"></dispatch>
+			<dispatch e="test" f="#listItem" p="childNodes,b,.special"></dispatch>
+		</exec>
+		<div class="container_2">
+			<e on="test" do="debug"></e>
+			<e global on="test" do="debug"></e>
+			<ul>
+				<e on="test" do="debug"></e>
+				<li>
+					<e on="test" do="debug"></e>
+					<b>
+						<e on="test" do="debug"></e>
+					</b>
+				</li>
+				<li id="listItem">
+					<e on="test" do="debug"></e>
+					<ul>
+						<e on="test" do="debug"></e>
+						< !-- 
+						Эти диспатчеры не вызываются, а только инициализируются
+						-- >
+						<dispatch id="d1" e="test" f=".container_2"></dispatch>
+						<dispatch id="d2" e="test" f=".container_2" p="global"></dispatch>
+						<dispatch id="d3" e="test" f=".container_2" p="parent"></dispatch>
+						<dispatch id="d4" e="test" f=".container_2" p="childNodes"></dispatch>
+						<dispatch id="d5" e="test" f=".container_2" p="childNodes,b,.special"></dispatch>
+
+						<li>
+							<e on="test" do="debug"></e>
+							<b class="special">
+								<e on="test" do="debug"></e>
+								<exec>
+									< !-- 
+									Контейнером начала распространения события сделаем
+									родителя с именем LI 
+									-- >
+									<dispatch e="test" f="li"></dispatch>
+									<dispatch e="test" f="li" p="global"></dispatch>
+									<dispatch e="test" f="li" p="parent"></dispatch>
+									<dispatch e="test" f="li" p="childNodes"></dispatch>
+									<dispatch e="test" f="li" p="childNodes,b,.special"></dispatch>
+								</exec>
+							</b>
+						</li>
+					</ul>
+				</li>
+				<li>
+					<e on="test" do="debug"></e>
+				</li>
+			</ul>
+		</div>
+
+		<exec>
+			< !-- 
+			Вызываем удаленные диспатчеры
+			-- >
+			<dispatch use="d1"></dispatch>
+			<dispatch use="d2"></dispatch>
+			<dispatch use="d3"></dispatch>
+			<dispatch use="d4"></dispatch>
+			<dispatch use="d5"></dispatch>
+		</exec>
+
+	</div-->
+
+<code class="html" id="divContent"><dispatch id="clear" e="clear"></dispatch><span class="tag divTag divContent"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;div class=<span class="attrVal">"content"</span>&gt;</span>
+  <span class="zTag">&lt;exec&gt;</span>
+    <span class="comment">&lt;!-- 
+    Простые примеры. 
+    Контейнер начала распространения события: div.content
+    --&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" p="global"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_ga" p="global"></dispatch></handler>"global"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".divContent"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".divContent"></dispatch></handler>"parent"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".divTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".container_1,.container_2"></dispatch></handler>"childNodes"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".divTag,.bTag,.special"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#divContent" p=".container_1,.container_2,.bTag,.special"></dispatch></handler>"childNodes,b,.special"</span>&gt;&lt;/dispatch&gt;</span>
+  <span class="zTag">&lt;/exec&gt;</span>
+  <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+  <span class="tag divTag container_1"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;div class=<span class="attrVal">"container_1"</span>&gt;</span>
+    <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+    <span class="tag ulTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;ul&gt;</span>
+      <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+      <span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag bTag"><e on="hl" do="addClass">hl</e><e global on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;b&gt;</span>
+          <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+          <span class="zHandler">&lt;e <span class="global"><e global on="hl_ga" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>global</span> on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag">&lt;/b&gt;</span>
+      <span class="tag">&lt;/li&gt;</span>
+      <span id="special"><span class="tag liTag special"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li class=<span class="attrVal">"special"</span>&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag ulTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;ul&gt;</span>
+          <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+          <span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+            <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+            <span class="tag bTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;b&gt;</span>
+              <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+            <span class="tag">&lt;/b&gt;</span>
+          <span class="tag">&lt;/li&gt;</span>
+          <span class="zTag">&lt;exec&gt;</span>
+            <span class="comment">&lt;!-- 
+            Контейнером начала распространения события сделаем
+            родителя с классом .special
+            --&gt;</span>
+            <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>".special"</span>&gt;&lt;/dispatch&gt;</span>
+            <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" p="global"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>".special"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_ga" p="global"></dispatch></handler>"global"</span>&gt;&lt;/dispatch&gt;</span>
+            <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>".special"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>"parent"</span>&gt;&lt;/dispatch&gt;</span>
+            <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special,.ulTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>".special"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".ulTag"></dispatch></handler>"childNodes"</span>&gt;&lt;/dispatch&gt;</span>
+            <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special,.ulTag,.bTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".special"></dispatch></handler>".special"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#special" p=".ulTag,.bTag"></dispatch></handler>"childNodes,b,.special"</span>&gt;&lt;/dispatch&gt;</span>
+          <span class="zTag">&lt;/exec&gt;</span>
+        <span class="tag">&lt;/ul&gt;</span>
+      <span class="tag">&lt;/li&gt;</span></span>
+      <span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+      <span class="tag">&lt;/li&gt;</span>
+    <span class="tag">&lt;/ul&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+  <span class="zTag">&lt;exec&gt;</span>
+    <span class="comment">&lt;!-- 
+    Сделаем началом распространения события контейнер #listItem
+    --&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"#listItem"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" p="global"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"#listItem"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_ga" p="global"></dispatch></handler>"global"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"#listItem"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"parent"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem,.ulTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"#listItem"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".ulTag"></dispatch></handler>"childNodes"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem,.ulTag,.bTag,.special"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".listItem"></dispatch></handler>"#listItem"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#codeListItem" p=".ulTag,.bTag.special"></dispatch></handler>"childNodes,b,.special"</span>&gt;&lt;/dispatch&gt;</span>
+  <span class="zTag">&lt;/exec&gt;</span>
+  <span id="container_2"><span class="tag divTag container_2"><e on="hl" do="addClass">hl</e><e global on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;div class=<span class="attrVal">"container_2"</span>&gt;</span>
+    <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+    <span class="zHandler">&lt;e <span class="global"><e global on="hl_ga" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>global</span> on="test" do="debug"&gt;&lt;/e&gt;</span>
+    <span class="tag ulTag childNode"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;ul&gt;</span>
+      <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+      <span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag bTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;b&gt;</span>
+          <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag">&lt;/b&gt;</span>
+      <span class="tag">&lt;/li&gt;</span>
+      <span id="codeListItem"><span class="tag liTag listItem"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li id=<span class="attrVal">"listItem"</span>&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+        <span class="tag ulTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;ul&gt;</span>
+          <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+          <span class="comment">&lt;!-- 
+          Эти диспатчеры не вызываются, а только инициализируются
+          --&gt;</span>
+          <span class="zTag" id="dispatch_1"><e on="hl_d" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d1"></dispatch></handler><dispatch id="d1" e="hl" f="#container_2"></dispatch>dispatch</span> id=<span class="attrVal">"d1"</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>".container_2"</span>&gt;&lt;/dispatch&gt;</span>
+          <span class="zTag" id="dispatch_2"><e on="hl_d" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d2"></dispatch></handler><dispatch id="d2" e="hl" p="global"></dispatch>dispatch</span> id=<span class="attrVal">"d2"</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>".container_2"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_ga" p="global"></dispatch></handler>"global"</span>&gt;&lt;/dispatch&gt;</span>
+          <span class="zTag" id="dispatch_3"><e on="hl_d" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d3"></dispatch></handler><dispatch id="d3" e="hl" f="#container_2" p=".container_2"></dispatch>dispatch</span> id=<span class="attrVal">"d3"</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>".container_2"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>"parent"</span>&gt;&lt;/dispatch&gt;</span>
+          <span class="zTag" id="dispatch_4"><e on="hl_d" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d4"></dispatch></handler><dispatch id="d4" e="hl" f="#container_2" p=".container_2,.childNode"></dispatch>dispatch</span> id=<span class="attrVal">"d4"</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>".container_2"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".childNode"></dispatch></handler>"childNodes"</span>&gt;&lt;/dispatch&gt;</span>
+          <span class="zTag" id="dispatch_5"><e on="hl_d" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d5"></dispatch></handler><dispatch id="d5" e="hl" f="#container_2" p=".container_2,.childNode,.bTag,.special"></dispatch>dispatch</span> id=<span class="attrVal">"d5"</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".container_2"></dispatch></handler>".container_2"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#container_2" p=".childNode,.bTag,.special"></dispatch></handler>"childNodes,b,.special"</span>&gt;&lt;/dispatch&gt;</span>
+          <span id="liTag"><span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+            <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+            <span class="tag bTag special"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;b class=<span class="attrVal">"special"</span>&gt;</span>
+              <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+              <span class="zTag">&lt;exec&gt;</span>
+                <span class="comment">&lt;!-- 
+                Контейнером начала распространения события сделаем
+                родителя с именем LI 
+                --&gt;</span>
+                <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"li"</span>&gt;&lt;/dispatch&gt;</span>
+                <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" p="global"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"li"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_ga" p="global"></dispatch></handler>"global"</span>&gt;&lt;/dispatch&gt;</span>
+                <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"li"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"parent"</span>&gt;&lt;/dispatch&gt;</span>
+                <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag,.bTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"li"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".bTag"></dispatch></handler>"childNodes"</span>&gt;&lt;/dispatch&gt;</span>
+                <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag,.bTag"></dispatch></handler>dispatch</span> e=<span class="attrVal">"test"</span> f=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".liTag"></dispatch></handler>"li"</span> p=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl" f="#liTag" p=".bTag"></dispatch></handler>"childNodes,b,.special"</span>&gt;&lt;/dispatch&gt;</span>
+              <span class="zTag">&lt;/exec&gt;</span>
+            <span class="tag">&lt;/b&gt;</span>
+          <span class="tag">&lt;/li&gt;</span></span>
+        <span class="tag">&lt;/ul&gt;</span>
+      <span class="tag">&lt;/li&gt;</span></span>
+      <span class="tag liTag"><e on="hl" do="addClass">hl</e><e on="clear" do="removeClass">hl</e>&lt;li&gt;</span>
+        <span class="zHandler">&lt;e on="test" do="debug"&gt;&lt;/e&gt;</span>
+      <span class="tag">&lt;/li&gt;</span>
+    <span class="tag">&lt;/ul&gt;</span>
+  <span class="tag">&lt;/div&gt;</span></span>
+  <span class="zTag">&lt;exec&gt;</span>
+    <span class="comment">&lt;!-- 
+    Вызываем удаленные диспатчеры
+    --&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d1"></dispatch></handler>dispatch</span> use=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_d" f="#dispatch_1"></dispatch></handler>"d1"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d2"></dispatch></handler>dispatch</span> use=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_d" f="#dispatch_2"></dispatch></handler>"d2"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d3"></dispatch></handler>dispatch</span> use=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_d" f="#dispatch_3"></dispatch></handler>"d3"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d4"></dispatch></handler>dispatch</span> use=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_d" f="#dispatch_4"></dispatch></handler>"d4"</span>&gt;&lt;/dispatch&gt;</span>
+    <span class="zTag">&lt;<span class="dispatcher hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch use="d5"></dispatch></handler>dispatch</span> use=<span class="attrVal hoverUS"><handler on="click"><dispatch use="clear"></dispatch><dispatch e="hl_d" f="#dispatch_5"></dispatch></handler>"d5"</span>&gt;&lt;/dispatch&gt;</span>
+  <span class="zTag">&lt;/exec&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+</code>	
+
+</body>
+</html>

@@ -99,6 +99,35 @@ code .comment
 {
 	color: #7f8c8d;
 }
+code .zHandler
+{
+	color: #000;
+}
+code .dispatcher
+{
+	color: #fff;
+	text-shadow: 2px 1px 0px rgba(0,0,0,0.2);
+}
+code .hl
+{
+	background: #000;
+	border-radius: 5px;
+	padding: 0px 5px;
+	margin: 0px -5px;
+}
+code .global
+{
+	color: #f1c40f;
+}
+code .zTag:hover .hoverUS
+{
+	border-bottom: 1px dotted #7f8c8d;
+	cursor: pointer;
+}
+code .hoverUS:hover
+{
+	color: #f1c40f;
+}
 
 .pMarker::before, 
 .bMarker::before, 
