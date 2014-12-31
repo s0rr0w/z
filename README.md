@@ -289,6 +289,7 @@ z.dispatchById( "dispatcherID"[, mixinData ] );
 
 * Установка обработчиков `<e>` [»»»](#Установка-обработчиков-e)
 * Регистрация обработчиков `z.addHandler` [»»»](#Регистрация-обработчиков-zaddhandler)
+* Предустановленные обработчики [»»»](#Предустановленные-обработчики)
 
 #### Установка обработчиков `<e>`
 
@@ -342,6 +343,63 @@ z.addHandler("addClass", function(e, data){
 <e on="setLayout" do="addClass">myClass</e>
 ```
 то значение `data[0]` для вызова первого обработчика `addClass` будет равно `modal`, а для второго уже `myClass`
+
+#### Предустановленные обработчики
+
+По умолчанию в системе установлены следующие обработчики:
+
+* [template](#Обработчик-template)
+* [templateIfMatch](#Обработчик-templateIfMatch)
+* [templateIfAttrMatch](#Обработчик-templateIfAttrMatch)
+* [templateIfExists](#Обработчик-templateIfExists)
+* [templateScopeIfExists](#Обработчик-templateScopeIfExists)
+* [templateOnce](#Обработчик-templateOnce)
+* [broadcastEvent](#Обработчик-broadcastEvent)
+* [dispatchEvent](#Обработчик-dispatchEvent)
+
+Подробнее о темплейтировании можно прочитать в [соответствующем разделе](#Темплейтирование)
+
+##### Обработчик `template`
+
+```html
+<e on="eventName" do="template">templateID[,templatingMode]</e>
+```
+
+Где
+
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик выполняется без дополнительных условий срабатывания
+
+##### Обработчик `templateIfMatch`
+
+```html
+<e on="eventName" do="templateIfMatch">propertyName,constant,templateID[,templatingMode]</e>
+```
+
+Где
+
+* `propertyName` -- имя свойства объекта `zEvent.data`
+* `constant` -- требуемое значение свойства для срабатывания обработчика
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `propertyName` и оно равняется `constant`. 
+
+##### Обработчик `templateIfAttrMatch`
+
+```html
+<e on="eventName" do="templateIfAttrMatch">attributeName,templateID[,templatingMode]</e>
+```
+
+Где
+
+* `attributeName` -- имя атрибута и свойства объекта `zEvent.data` 
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `attributeName` и его значение равняется значению одноименного атрибута ноды. 
 
 
 ---
