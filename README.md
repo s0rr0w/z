@@ -349,13 +349,13 @@ z.addHandler("addClass", function(e, data){
 По умолчанию в системе установлены следующие обработчики:
 
 * [template](#Обработчик-template)
-* [templateIfMatch](#Обработчик-templateIfMatch)
-* [templateIfAttrMatch](#Обработчик-templateIfAttrMatch)
-* [templateIfExists](#Обработчик-templateIfExists)
-* [templateScopeIfExists](#Обработчик-templateScopeIfExists)
-* [templateOnce](#Обработчик-templateOnce)
-* [broadcastEvent](#Обработчик-broadcastEvent)
-* [dispatchEvent](#Обработчик-dispatchEvent)
+* [templateIfMatch](#Обработчик-templateifmatch)
+* [templateIfAttrMatch](#Обработчик-templateifattrmatch)
+* [templateIfExists](#Обработчик-templateifexists)
+* [templateScopeIfExists](#Обработчик-templatescopeifexists)
+* [templateOnce](#Обработчик-templateonce)
+* [broadcastEvent](#Обработчик-broadcastevent)
+* [dispatchEvent](#Обработчик-dispatchevent)
 
 Подробнее о темплейтировании можно прочитать в [соответствующем разделе](#Темплейтирование)
 
@@ -372,6 +372,16 @@ z.addHandler("addClass", function(e, data){
 
 Обработчик выполняется без дополнительных условий срабатывания
 
+_Например_
+```html
+<div>
+ <e on="test" do="template">myTemplate</e>
+ <exec>
+  <dispatch e="test"></dispatch>
+ </exec>
+</div>
+```
+
 ##### Обработчик `templateIfMatch`
 
 ```html
@@ -387,6 +397,23 @@ z.addHandler("addClass", function(e, data){
 
 Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `propertyName` и оно равняется `constant`. 
 
+_Например_
+```html
+<div>
+ <div>
+  <e on="test" do="templateIfMatch">tab,one,myTemplate</e>
+  <!-- Этот обработчик будет вызван, так как свойство tab в данных события равно "one" -->
+ </div>
+ <div>
+  <e on="test" do="templateIfMatch">tab,two,myTemplate</e>
+  <!-- Этот обработчик не будет выполнен -->
+ </div>
+ <exec>
+  <dispatch e="test">{ "tab": "one" }</dispatch>
+ </exec>
+</div>
+```
+
 ##### Обработчик `templateIfAttrMatch`
 
 ```html
@@ -401,6 +428,150 @@ z.addHandler("addClass", function(e, data){
 
 Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `attributeName` и его значение равняется значению одноименного атрибута ноды. 
 
+_Например_
+```html
+<div>
+ <div tab="one">
+  <e on="test" do="templateIfAttrMatch">tab,myTemplate</e>
+  <!-- Этот обработчик будет вызван, так как свойство tab в данных события равно значению одноименного атрибута "one" -->
+ </div>
+ <div tab="two">
+  <e on="test" do="templateIfAttrMatch">tab,myTemplate</e>
+  <!-- Этот обработчик не будет выполнен -->
+ </div>
+ <exec>
+  <dispatch e="test">{ "tab": "one" }</dispatch>
+ </exec>
+</div>
+```
+
+##### Обработчик `templateIfExists`
+
+```html
+<e on="eventName" do="templateIfExists">propertyName,templateID[,templatingMode]</e>
+```
+
+Где
+
+* `propertyName` -- имя свойства объекта `zEvent.data` 
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `attributeName` и его значение строго не равно `undefined`
+
+_Например_
+```html
+<div>
+ <div>
+  <e on="test" do="templateIfExists">one,myTemplate</e>
+  <!-- Этот обработчик будет вызван, так как свойство one присутствует в данных события -->
+ </div>
+ <div>
+  <e on="test" do="templateIfExists">two,myTemplate</e>
+  <!-- Этот обработчик не будет выполнен, данные события не содержат свойства two -->
+ </div>
+ <div>
+  <e on="test" do="templateIfExists">three,myTemplate</e>
+  <!-- Этот обработчик также будет вызван, так как свойство three определено -->
+ </div>
+ <exec>
+  <dispatch e="test">{ "one": true, "three": { "x": 10, "y": 20 } }</dispatch>
+ </exec>
+</div>
+```
+
+##### Обработчик `templateScopeIfExists`
+
+```html
+<e on="eventName" do="templateScopeIfExists">propertyName,templateID[,templatingMode]</e>
+```
+
+Где
+
+* `propertyName` -- имя свойства объекта `zEvent.data` 
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик срабатывает, если переданные с событием данные (`zEvent.data`) содержат свойство `attributeName` и его значение строго не равно `undefined`. В темплейт будет передана копия события, у которого данные будут равны копии свойства `zEvent.data[propertyName]`
+
+_Например_
+```html
+<div>
+ <div>
+  <e on="test" do="templateScopeIfExists">one,myTemplate</e>
+  <!-- Этому темплейту будут переданы данные { "x": 0, "y": 50 } -->
+ </div>
+ <div>
+  <e on="test" do="templateScopeIfExists">two,myTemplate</e>
+  <!-- Этому { "x": 10, "y": 20 } -->
+ </div>
+ <exec>
+  <dispatch e="test">{ "one": { "x": 0, "y": 50 }, "two": { "x": 10, "y": 20 } }</dispatch>
+ </exec>
+</div>
+```
+
+##### Обработчик `templateOnce`
+
+```html
+<e on="eventName" do="templateOnce">templateID[,templatingMode]</e>
+```
+
+Где
+
+* `templateID` -- идентификатор темплейта `<template>`
+* `templatingMode` -- режим темплейтирования `add` или `replace`
+
+Обработчик срабатывает один раз. 
+
+_Например_
+```html
+<div>
+ <e on="test" do="templateOnce">myTemplate</e>
+ <exec>
+  <dispatch e="test">{ "color": "red" }</dispatch>
+  <!-- Это событие будет обработано -->
+  <dispatch e="test">{ "color": "blue" }</dispatch>
+  <!-- Это уже нет -->
+ </exec>
+</div>
+```
+
+##### Обработчик `broadcastEvent`
+
+```html
+<e on="eventName" do="broadcastEvent">[p1,p2,...,pn]</e>
+```
+
+Где
+
+* `p1,p2,...pn` -- директивы распространения события
+
+Данный обработчик создает и запускает копию события с указанными директивами распространения, при этому `zEvent.data` передается по ссылке
+
+_Например_
+```html
+<div>
+ <div>
+  <e on="test" do="broadcastEvent">p,span</e>
+  <!-- Этот обработчик будет вызван -->
+  <p>
+   <e on="test" do="something"></e>
+   <!-- Этот обработчик будет вызван благодаря broadcastEvent -->
+   Этот параграф содержит 
+   <span>
+    <e on="test" do="somethingElse"></e>
+    <!-- И этот тоже -->
+    span
+   </span>
+  </p>
+ </div>
+ <exec>
+  <dispatch e="test" p="childNodes"></dispatch>
+  <!-- Запускаем событие test только для дочерних элементов -->
+ </exec>
+</div>
+```
 
 ---
 
