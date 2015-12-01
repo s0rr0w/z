@@ -1,5 +1,5 @@
 /*
-Z (zet) framework, version 0.1 
+Z (zet) framework, version 0.6.1
 Code is available under the Piblic Domain (Unlicense) 
 */
 
@@ -166,7 +166,7 @@ var z = (function(){
 
 				switch ( nodeName ) {
 					case "dispatch":
-						processDispatchNode( childNode )();
+						dispatch( getEventObj(childNode) );
 						break;
 				}
 			}
@@ -186,14 +186,23 @@ var z = (function(){
 			var 
 				node = eList[i],
 				childNodes = node.childNodes,
-				onAttr = node.getAttribute("on"),
+				eventName = node.getAttribute("on"),
 				keys = node.getAttribute("keys"),
 				confirmMsg = node.getAttribute("confirm"),
+				freezeTime = node.getAttribute("freeze"),
+				target = node.getAttribute("target"),
 				parentNode = node.parentNode,
-				targetNode = parentNode
+				targetNode = parentNode,
+				exeQueue = [],
+				alreadyAssigned = !!(node._processed_)
 			;
 
-			if ( parentNode.nodeName.toUpperCase() === "WRAPPER" ) {
+			if (alreadyAssigned) continue;
+
+			if ( target === "window" ) {
+				targetNode = window;
+			}
+			else if ( parentNode.nodeName.toUpperCase() === "WRAPPER" ) {
 				targetNode = parentNode.getElementsByTagName("*").item(0);
 			};
 
@@ -205,16 +214,20 @@ var z = (function(){
 
 				switch ( nodeName ) {
 					case "dispatch":
-						var tmpFunc = processDispatchNode( childNode );
-						if ( keys ) {
-							tmpFunc = handlerWithKeyLimits.bind( this, tmpFunc, keys );
-						}
-						if ( confirmMsg ) tmpFunc = handlerWithConfirm.bind( this, tmpFunc, confirmMsg );
-						targetNode.addEventListener( onAttr, tmpFunc, false );
+						exeQueue.push(dispatchWrapper.bind( this, childNode ));
 						break;
 				}
 			}
 
+			if ( exeQueue.length ) {
+				var tmpFunc = handlerExecQueue.bind( this, exeQueue );
+				if ( keys ) tmpFunc = handlerWithKeyLimits.bind( this, tmpFunc, keys );
+				if ( confirmMsg ) tmpFunc = handlerWithConfirm.bind( this, tmpFunc, confirmMsg );
+				if ( freezeTime ) tmpFunc = handlerWithFreezeTime.bind( this, tmpFunc, freezeTime );
+				targetNode.addEventListener( eventName, tmpFunc, false );
+			}
+
+			node._processed_ = true;
 		}
 
 	};
@@ -368,7 +381,7 @@ var z = (function(){
 			var hObj = handlersList[i];
 
 			if ( isGlobal ^ hObj.global ) continue;
-			
+
 			if ( handlers[hObj.h] && handlers[hObj.h] instanceof Function ) 
 				try {
 					handlers[hObj.h].call( node, event, hObj.p );
@@ -379,8 +392,18 @@ var z = (function(){
 
 	var dispatchById = function ( nodeID, mixin ) {
 		try {
-			processDispatchNode( $(nodeID), mixin )();
+			var node = findDispatchNode(this, nodeID);
+			dispatch( getEventObj(node, mixin) );
 		} catch ( e ) { }
+	};
+
+	var dispatchWrapper = function ( node, DOMEvnt ) {
+		if ( !node ) return;
+
+		var args = [ getEventObj(node) ];
+		if ( DOMEvnt ) args.push(DOMEvnt);
+
+		dispatch.apply( this, args );
 	};
 
 	var createEObjFromDispatchNode = function ( node ) {
@@ -396,7 +419,9 @@ var z = (function(){
 			propagationAttr = node.getAttribute("p"),
 			fromAttr = node.getAttribute("f"),
 			parentNode = node.parentNode,
-			parentNodeName = parentNode.nodeName.toLowerCase()
+			parentNodeName = parentNode.nodeName.toLowerCase(),
+			tmpFragment = document.createDocumentFragment(),
+			tmpData = "{}"
 		;
 
 		if ( parentNodeName == "exec" || parentNodeName == "handler" ) parentNode = parentNode.parentNode;
@@ -405,45 +430,77 @@ var z = (function(){
 			{ 
 				e: eventAttr, 
 				t: node,
-				f: (fromAttr)? getParentNode(node, fromAttr) : parentNode,
-				data: JSON.parse("{}")
+				f: (fromAttr)? getParentNode(node, fromAttr) : parentNode
 			};
 
 		if ( propagationAttr ) eventObj.p = propagationAttr;
 		if ( useAttr ) eventObj.use = useAttr;
 
+		try {
+
+			iterateTemplate( node, tmpFragment, {} );
+			tmpData = tmpFragment.textContent.trim() || "{}";
+
+		} catch ( e ) {}
+
+		eventObj.data = tmpData;
+
 		return eventObj;
 	};
 
-	var processDispatchNode = function ( node, mixin ) {
+	var findDispatchNode = function ( node, target ) {
 
-		var eventObj = createEObjFromDispatchNode( node );
+		if (!target) return null;
+
+		var
+			path = target.split("/"),
+			id = (path.length > 1)? path[1] || path[2] : path[0],
+			absolutePath = !(path[2])
+			parentNode = (path.length > 1)? getParentNode( node, path[0] ) : null
+		;
+		if (parentNode) {
+			if (absolutePath) {
+				for (var i=parentNode.childNodes.length; i--;) {
+					var
+						childNode = parentNode.childNodes.item(i),
+						nodeName = childNode.nodeName.toUpperCase() || "",
+						nameAttr = childNode.getAttribute && childNode.getAttribute("name") || ""
+					;
+					if ( nodeName === "DISPATCH" && nameAttr == id ) return childNode;
+				}
+			}
+			else
+			{
+				return parentNode.querySelector("dispatch[name='" + id + "']");
+			}
+		}
+		else
+		{
+			return $(id);
+		}
+	};
+
+	var getEventObj = function ( node, mixin ) {
+
+		var
+			eventObj = createEObjFromDispatchNode( node ),
+			tmpData = eventObj.data
+		;
 
 		try {
-			var useNode = $(eventObj.use);
-			if ( useNode ) {
-				eventObj = createEObjFromDispatchNode( useNode );
-			}
-			var 
-				dataSrc = ( node.textContent )? node : useNode,
-				tmpFragment = document.createDocumentFragment(),
-				tmpData = {}
-			;
-
-			try {
-
-				iterateTemplate( dataSrc, tmpFragment, {} );
-				tmpData = JSON.parse(tmpFragment.textContent.trim());
-
-			} catch ( e ) {}
-
-			if (mixin) mixinData( tmpData, mixin );
-			eventObj.data = tmpData;
+			var useNode = findDispatchNode(node, eventObj.use);
+			if ( useNode ) eventObj = createEObjFromDispatchNode( useNode );
+			if ( tmpData === "{}" && eventObj.data ) tmpData = eventObj.data;
 
 		} catch ( e ) { };
 
-		return dispatch.bind( node, eventObj );
+		tmpData = JSON.parse(tmpData);
 
+		if (mixin) mixinData( tmpData, mixin );
+
+		eventObj.data = tmpData;
+
+		return eventObj;
 	};
 
 	var template = function ( event, options ) {
@@ -458,13 +515,13 @@ var z = (function(){
 			tplNode = $tpl(tplID)
 		;
 
-		if ( !tplNode ) return;
+		if ( !tplNode || ( mode === "once" && containerNode._templated_ ) ) return containerNode;
 
 		var tmpFragment = document.createDocumentFragment();
 
-		iterateTemplate(tplNode, tmpFragment, event.data);
+		iterateTemplate(tplNode, tmpFragment, event.data, containerNode);
 
-		if ( mode == "replace" ) containerNode.innerHTML = "";
+		if ( ["replace", "once"].indexOf(mode) !== -1 ) containerNode.innerHTML = "";
 
 		for ( var i=0, l=tmpFragment.childNodes.length; i<l; i++ ) {
 			childNodesCache.push( tmpFragment.childNodes[i] );
@@ -472,16 +529,19 @@ var z = (function(){
 
 		containerNode.appendChild( tmpFragment );
 
+		containerNode._templated_ = true;
+
 		processAllNodes(containerNode);
 
 		if ( broadcast ) {
 
-			propagation = options.slice(2).join(",");
-			var newE = {
-				p: propagation,
-				e: event.e,
-				data: event.data
-			}
+			var
+				propagation = options.slice(2).join(","),
+				newE = {
+					p: propagation,
+					e: event.e,
+					data: event.data
+				}
 
 			for ( var i=0, l=childNodesCache.length; i<l; i++ ) {
 				var childNode = childNodesCache[i];
@@ -493,13 +553,16 @@ var z = (function(){
 			
 		}
 
-		containerNode._templated_ = true;
+		return containerNode;
 
 	};
 
 	var iterateTemplate = function ( tplNode, container, data ) {
 
-		var tplContent = tplNode.content || tplNode;
+		var 
+			tplContent = tplNode.content || tplNode,
+			domNode = arguments[3] || null
+		;
 
 		for ( var i=0, l=tplContent.childNodes.length; i<l; i++ ) {
 
@@ -513,36 +576,36 @@ var z = (function(){
 
 					var 
 						exprAttr = childNode.getAttribute("expr"),
-						captures = container._captures_ || {},
+						captures = domNode && domNode._captures_ || {},
 						exprFunc = new Function ( "_data_", "_captures_", "with(_data_){ try { return !!(" + exprAttr + ")} catch(e) { return false } }" )
 					;
 
 					if (exprFunc(data, captures)) {
 						var thenNode = getChildByName.call( childNode, "then" );
-						if ( !thenNode ) break;
-						iterateTemplate( thenNode, container, data );
+						iterateTemplate( thenNode || childNode, container, data, domNode );
 					}
 					else
 					{
 						var elseNode = getChildByName.call( childNode, "else" );
 						if ( !elseNode ) break;
-						iterateTemplate( elseNode, container, data );
+						iterateTemplate( elseNode, container, data, domNode );
 					}
 					break;
 
 				case "value":
 					var
-						defaultVal = childNode.getAttribute("default") || null,
+						defaultVal = childNode.getAttribute("default") || "",
 						expr = childNode.textContent,
 						exprArr = expr.split("^"),
-						retFunc = new Function ( "data", "with(data){ try { return " + exprArr[0] + " } catch (e) { return '' } }" ),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + exprArr[0] + " } catch (e) { return '' } }" ),
 						res = retFunc(data),
-						res = ((res === "" || res === undefined) && defaultVal !== null )? defaultVal : res,
+						res = ( res === undefined || res === null )? "" : res,
+						res = ( res === "" && defaultVal )? defaultVal : res,
 						tmpNode = document.createTextNode(res)
 					;
 					if ( exprArr.length > 1 ) {
 						var 
-							retFunc = new Function ( "data", "with(data){ try { return " + exprArr[1] + " } catch (e) { return '' } }" ),
+							retFunc = new Function ( "_data_", "with(_data_){ try { return " + exprArr[1] + " } catch (e) { return '' } }" ),
 							pluralVal = retFunc(data),
 							type = exprArr[2] || 1,
 							tmpNode = document.createTextNode( getPluralText( type, res, pluralVal ) )
@@ -551,15 +614,38 @@ var z = (function(){
 					container.appendChild( tmpNode );
 					break;
 
+				case "inner_html":
+					var
+						defaultVal = childNode.getAttribute("default") || "",
+						expr = childNode.textContent,
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
+						res = retFunc(data),
+						res = ( res === undefined || res === null )? "" : res,
+						res = ( res === "" && defaultVal )? defaultVal : res
+					;
+					if ( container.innerHTML !== undefined ) {
+						container.innerHTML += res;
+					}
+					else
+					{
+						var tmpElement = document.createElement("div");
+						tmpElement.innerHTML = res;
+						for ( var i=0, l=tmpElement.childNodes.length; i<l; i++ ) {
+							container.appendChild(tmpElement.childNodes.item(i));
+						}
+					}
+					break;
+
 				case "val_by":
 					var 
-						defaultVal = childNode.getAttribute("default") || null,
+						defaultVal = childNode.getAttribute("default") || "",
 						expr = childNode.textContent,
-						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
 						res = retFunc(data),
-						retFunc = new Function ( "data", "with(data){ try { return " + res + " } catch (e) { return '' } }" ),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + res + " } catch (e) { return '' } }" ),
 						res = retFunc(data),
-						res = ((res === "" || res === undefined) && defaultVal !== null )? defaultVal : res,
+						res = ( res === undefined || res === null )? "" : res,
+						res = ( res === "" && defaultVal )? defaultVal : res,
 						tmpNode = document.createTextNode(res)
 					;
 					container.appendChild( tmpNode );
@@ -571,17 +657,17 @@ var z = (function(){
 						tmpFragment = document.createDocumentFragment()
 					;
 
-					iterateTemplate( childNode, tmpFragment, data );
+					iterateTemplate( childNode, tmpFragment, data, domNode );
 
 					var 
 						expr = tmpFragment.textContent.trim(),
-						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
 						res = retFunc(data) || data,
 						tplNode = $tpl(tplId),
 						tmpFragment = document.createDocumentFragment()
 					;
 
-					iterateTemplate( tplNode, container, res );
+					iterateTemplate( tplNode, container, res, domNode );
 
 					break;
 
@@ -601,13 +687,13 @@ var z = (function(){
 
 					if ( tagName ) {
 						var newNode = document.createElement( tagName );
-						iterateTemplate( cloneNode, newNode, data );
+						iterateTemplate( cloneNode, newNode, data, domNode );
 						container.appendChild( newNode );
 					}
 					else
 					{
 						tmpFragment = document.createDocumentFragment();
-						iterateTemplate( cloneNode, tmpFragment, data );
+						iterateTemplate( cloneNode, tmpFragment, data, domNode );
 						container.appendChild( tmpFragment );
 					}
 					break;
@@ -620,15 +706,14 @@ var z = (function(){
 						targetNode = ( container.nodeName.toUpperCase() === "WRAPPER" )? container.getElementsByTagName("*").item(0) : container
 					;
 
-					if ( container._captures_ ) tmpFragment._captures_ = container._captures_;
-					iterateTemplate( childNode, tmpFragment, data );
-					targetNode.setAttribute( nameAttr, tmpFragment.textContent.trim() );
+					iterateTemplate( childNode, tmpFragment, data, domNode );
+					targetNode.setAttribute( nameAttr, tmpFragment.textContent.trim().replace(/\s+/g," ") );
 
 					break;
 
 				case "class":
 					var cloneNode = childNode.cloneNode();
-					iterateTemplate( childNode, cloneNode, data );
+					iterateTemplate( childNode, cloneNode, data, domNode );
 					container.classList.add( cloneNode.textContent.trim() );
 					break;
 
@@ -642,25 +727,25 @@ var z = (function(){
 					if ( !fromAttr || !itemAttr ) break;
 
 					var
-						retFunc = new Function ( "data", "with(data){ try { return " + fromAttr + " } catch (e) { return '' } }" ),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + fromAttr + " } catch (e) { return '' } }" ),
 						res = retFunc(data)
 					;
 
 					if ( Array.isArray(res) ) {
 						for ( var j=0, k=res.length; j<k; j++ ) {
-							var tmpObj = {};
+							var tmpObj = { _parent_: data };
 							tmpObj[itemAttr] = res[j];
 							if ( keyAttr ) tmpObj[keyAttr] = j;
-							iterateTemplate( childNode, container, tmpObj );
+							iterateTemplate( childNode, container, tmpObj, domNode );
 						}
 					}
 					else if ( res instanceof Object ) {
 						for ( var j in res ) {
 							if ( ! res.hasOwnProperty( j ) ) continue;
-							var tmpObj = {};
+							var tmpObj = { _parent_: data };
 							tmpObj[itemAttr] = res[j];
 							if ( keyAttr ) tmpObj[keyAttr] = j;
-							iterateTemplate( childNode, container, tmpObj );
+							iterateTemplate( childNode, container, tmpObj, domNode );
 						}
 					}
 					break;
@@ -668,28 +753,30 @@ var z = (function(){
 				case "capture":
 					var 
 						captureName = childNode.getAttribute("to"),
+						initName = childNode.getAttribute("init"),
 						expr = childNode.getAttribute("expr") || true,
-						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
-						res = retFunc(data),
-						captures = container._captures_
+						captures = domNode && domNode._captures_,
+						retFunc = new Function ( "_data_", "_captures_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
+						res = retFunc(data, captures || {})
 					;
 					if ( captureName && res ) {
-						if ( captures === undefined ) captures = container._captures_ = {};
+						if ( captures === undefined ) captures = domNode._captures_ = {};
 						if ( !Array.isArray(captures[captureName]) ) captures[captureName] = [];
 						
 						var
 							tmpElement = document.createElement("content");
 						;
-						iterateTemplate( childNode, tmpElement, data );
+						iterateTemplate( childNode, tmpElement, data, domNode );
 						captures[captureName].push( tmpElement.innerHTML.trim() );
 					};
+					if ( initName && captures !== undefined ) captures[initName] = [];
 					break;
 
 				case "flush":
 					var
 						expr = childNode.textContent,
-						captureObj = container._captures_ || {},
-						retFunc = new Function ( "data", "with(data){ try { return " + expr + " } catch (e) { return '' } }" ),
+						captureObj = domNode && domNode._captures_ || {},
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
 						res = retFunc(captureObj)
 					;
 
@@ -704,6 +791,55 @@ var z = (function(){
 							container.appendChild(tmpElement.childNodes.item(i));
 						}
 					}
+
+					break;
+
+				case "datetime":
+					var
+						expr = childNode.getAttribute("use"),
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return null } }" ),
+						res = retFunc(data),
+						now = new Date(),
+						dt = new Date(),
+						dtObj = null
+					;
+					if ( res !== null && res !== undefined ) {
+						try {
+							 dt = new Date( res );
+						}
+						catch (e) {}
+
+						var
+							daysDiff = Math.floor(Math.abs((dt - now) / (1000 * 3600 * 24))),
+							tds = now.setHours(0,0,0,0).valueOf(),
+							ys = now.setDate(now.getDate()-1).valueOf(),
+							tms = now.setDate(now.getDate()+2).valueOf(),
+							tme = now.setDate(now.getDate()+1).valueOf(),
+
+							dtv = dt.valueOf(),
+							rel = "past",
+							rel = (dtv >= ys && dtv < tds)? "yesterday" : rel,
+							rel = (dtv >= tds && dtv < tms)? "today" : rel,
+							rel = (dtv >= tms && dtv < tme)? "tomorrow" : rel,
+							rel = ( dtv >= tme )? "future" : rel,
+
+							dtObj =
+								{
+									raw: dt,
+									y: dt.getFullYear(),
+									m: dt.getMonth(),
+									d: dt.getDate(),
+									H: dt.getHours(),
+									M: dt.getMinutes(),
+									S: dt.getSeconds(),
+									wd: dt.getDay(),
+								    daysDiff: daysDiff,
+								    rel: rel
+								}
+						;
+					}
+
+					iterateTemplate( childNode, container, { dt: dtObj }, domNode );
 
 					break;
 
@@ -723,13 +859,13 @@ var z = (function(){
 					var tmpName = nodeName.substr(2);
 					var tmpNode = document.createElement( tmpName );
 					cloneAttributes(childNode, tmpNode);
-					iterateTemplate( childNode, tmpNode, data );
+					iterateTemplate( childNode, tmpNode, data, tmpNode );
 					container.appendChild( tmpNode );
 					break;
 					
 				default:
 					var cloneNode = childNode.cloneNode();
-					iterateTemplate( childNode, cloneNode, data );
+					iterateTemplate( childNode, cloneNode, data, cloneNode );
 					container.appendChild( cloneNode );
 			}
 
@@ -750,6 +886,7 @@ var z = (function(){
 				case ".": 
 					var parentNode = node.parentNode;
 					var className = path.substr(1);
+					if ( !className ) return node;
 					while ( parentNode && !parentNode.classList.contains(className) ) parentNode = parentNode.parentNode;
 					return parentNode;
 				default:
@@ -794,6 +931,11 @@ var z = (function(){
 		globals.appendChild( shadowNode );
 	};
 
+	var handlerExecQueue = function ( exeQueue, DOMEvnt ) {
+		for ( var i=0, l=exeQueue.length; i<l; i++ ) {
+			exeQueue[i]( DOMEvnt );
+		}
+	};
 	var handlerWithKeyLimits = function ( handler, keys, DOMEvnt ) {
 		var 
 			keyArr = keys.split(","),
@@ -813,7 +955,7 @@ var z = (function(){
 		acceptedKeys[37] = "LA";
 		acceptedKeys[38] = "UA";
 		acceptedKeys[39] = "RA";
-		acceptedKeys[40] = "BA";
+		acceptedKeys[40] = "DA";
 
 		var keyAlias = acceptedKeys[keyCode];
 
@@ -835,6 +977,28 @@ var z = (function(){
 			DOMEvnt.preventDefault(true);
 			DOMEvnt.stopPropagation(true);
 		};
+	};
+	var handlerWithFreezeTime = function ( handler, freezeTime, DOMEvnt ) {
+		var
+			targetNode = DOMEvnt.target,
+			eventType = DOMEvnt.target,
+			freezeObj = targetNode._freeze_,
+			currentTime = new Date(),
+			currentTime = currentTime.valueOf()
+		;
+
+		if ( !freezeObj ) freezeObj = targetNode._freeze_ = {};
+		var lastActionTime = freezeObj[eventType] || 0;
+
+		if ( (currentTime - lastActionTime)/1000 > freezeTime ) {
+			freezeObj[eventType] = currentTime;
+			handler( DOMEvnt );
+		}
+		else
+		{
+			DOMEvnt.preventDefault(true);
+			DOMEvnt.stopPropagation(true);
+		}
 	};
 
 	var getPluralText = function ( type, key, value ) {
@@ -860,17 +1024,14 @@ var z = (function(){
 	};
 
 	var mixinData = function ( toObj, fromObj ) {
-		if ( !fromObj.data ) return;
-		if ( !toObj.data ) toObj.data = {};
+		if ( !fromObj || !toObj) return;
 
 		var 
-			fromObjData = fromObj.data,
-			toObjData = toObj.data,
-			keys = Object.keys(fromObjData)
+			keys = Object.keys(fromObj)
 		;
 
 		for( var i=0, key=keys[i], l=keys.length; i<l; i++, key=keys[i] ) {
-			toObjData[key] = fromObjData[key];
+			toObj[key] = fromObj[key];
 		}
 	}
 
@@ -889,7 +1050,8 @@ var z = (function(){
 		dispatch: dispatch,
 		dispatchById: dispatchById,
 		addHandler: addHandler,
-		template: template
+		template: template,
+		getParentNode: getParentNode
 	};
 
 	return map;
@@ -918,11 +1080,14 @@ z.addHandler( "templateIfAttrMatch", function ( e, data ) {
 
 	var
 		property = data[0],
-		value = this.getAttribute(property),
+		tmpPath = property.split("."),
+		attrName = tmpPath.pop(),
+		value = this.getAttribute(attrName),
+		exprFunc = new Function ( "_data_", "with(_data_){ try { return " + property + "} catch(e) { return false } }" ),
 		options = data.slice(1)
 	;
 
-	if ( e.data[property] != value ) return;
+	if ( exprFunc(e.data) != value ) return;
 
 	e.c = this;
 	z.template( e, options );
@@ -945,15 +1110,20 @@ z.addHandler( "templateScopeIfExists", function ( e, data ) {
 
 	var
 		property = data[0],
-		options = data.slice(1)
+		options = data.slice(1),
+		eventClone = Object.create(e),
+		localDataObj
 	;
 
 	if ( e.data[property] === undefined ) return;
 
-	var
-		localDataObj = Object.create(e.data[property]),
-		eventClone = Object.create(e)
-	;
+	if ( e.data[property] instanceof Array ) {
+		localDataObj = e.data[property].slice();
+	}
+	else
+	{
+		localDataObj = JSON.parse(JSON.stringify((e.data[property])));
+	}
 
 	eventClone.c = this;
 	eventClone.data = {};
@@ -963,9 +1133,8 @@ z.addHandler( "templateScopeIfExists", function ( e, data ) {
 
 });
 z.addHandler( "templateOnce", function ( e, data ) {
-
-	if ( this._templated_ ) return;
 	e.c = this;
+	data[1] = "once";
 	z.template( e, data );
 });
 
@@ -986,7 +1155,16 @@ z.addHandler( "dispatchEvent", function ( e, data ) {
 
 	if ( mode === "checkEmpty" && this.textContent.trim() !== "" ) { return; }
 
-	if ( mode === "useData" ) { mixin = e.data; }
+	if ( mode === "mixin" ) {
+		if ( data[2] ) {
+			mixin = {};
+			mixin[data[2]] = e.data;
+		}
+		else
+		{
+			mixin = e.data;
+		}
+	}
 
-	z.dispatchById( nodeID, mixin );
+	z.dispatchById.call( this, nodeID, mixin );
 });
