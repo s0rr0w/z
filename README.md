@@ -976,11 +976,11 @@ _Пример использования_
 При шаблонизации данных
 ```json
 {
-	"article":
-		{
-			"title": "Привет",
-			"body": "Как дела? [br] Что нового?"
-		}
+ "article":
+  {
+   "title": "Привет",
+   "body": "Как дела? [br] Что нового?"
+  }
 }
 ```
 Получим результат
@@ -1016,7 +1016,7 @@ _Пример использования_
 При шаблонизации данных
 ```json
 {
-	"text": "Нет данных"
+ "text": "Нет данных"
 }
 ```
 Получим результат
@@ -1024,7 +1024,7 @@ _Пример использования_
 <span>Нет данных</span>
 ```
 
-#### Динамическое создание атрибута <attr>
+#### Динамическое создание атрибута `<attr>`
 
 ```html
 <attr name="attributeName">attributeValue</attr>
@@ -1046,12 +1046,143 @@ _Пример использования_
 {
  "author":
  {
-	 "name": "Котигорошко",
-	 "website": "http://kotihoroshko.info"
-	}
+  "name": "Котигорошко",
+  "website": "http://kotihoroshko.info"
+ }
 }
 ```
 Получим результат
 ```html
 <a href="http://kotihoroshko.info">Страница автора</a>
 ```
+
+#### Динамическое добавление класса `<class>`
+
+```html
+<class>className</class>
+```
+
+Добавляет родительскому тегу класс с именем `className`. Содержимое тега `<class>` шаблонизируется.
+
+_Пример использования_
+```html
+<div class="access">
+ <class>
+  <if expr="demo">
+   <then>demo</then>
+   <else>normal</else>
+  </if>
+ </class>
+ Доступ
+</div>
+```
+При шаблонизации данных
+```json
+{
+ "demo": false
+}
+```
+Получим результат
+```html
+<div class="access normal">Доступ</div>
+```
+
+#### Цикл `<foreach>`
+
+```html
+<foreach from="list" item="item" [key="key"]></foreach>
+```
+
+Итерирует `list` (`Object` или `Array`), создавая на каждой итерации локальную зону видимости переменных `item`, и, если указано, ключ `key`. Для получения доступа к родительской зоне видимости, снаружи `foreach`, используется ключевое слово `_parent_`. Содержимое тега `<foreach>` шаблонизируется.
+
+_Пример использования_
+```html
+<ul>
+ <foreach from="menu" item="menuItem">
+  <li>
+   <value>menuItem.text</value>
+   <if expr="_parent_.active == menuItem.id">
+    <class>active</class>
+   </if>
+  </li>
+ </foreach>
+</ul>
+```
+При шаблонизации данных
+```json
+{
+ "menu":
+  [
+   { "text": "Файл", "id": "file" },
+   { "text": "Настройки", "id": "preferences" },
+   { "text": "Помощь", "id": "help" }
+  ],
+ "active": "file"
+}
+```
+Получим результат
+```html
+<ul>
+ <li class="active">Файл<li>
+ <li>Настройки<li>
+ <li>Помощь<li>
+</ul>
+```
+
+#### Накопление контента `<capture>`
+
+```html
+<capture [expr="expression"] to="captureName">capturedContent</capture>
+```
+
+Накапливает `capturedContent` в массив `captureName` контейнера, в котором находится `<capture>`. Если указан атрибут `expr`, то накопление данных будет производиться только в том случае, если выполняется условие `expression`. Содержимое тега `<capture>` шаблонизируется.
+
+Следующие директивы являются "прозрачными" для `<capture>`, т.е. не являются контейнерами, в котором накапливаются данные:
+* `if`, `then`, `else`
+* `include`
+* `tag`
+* `attr`
+* `class`
+* `foreach`
+* `capture`
+* `datetime`
+
+_Пример использования_
+```html
+<p>
+ Администраторы:
+ <foreach from="users" item="user">
+  <capture expr="user.admin" to="admins">
+   <b><value>user.name</value></b>
+  </capture>
+ </foreach>
+ <flush>admins.join(", ")</flush>
+</p>
+```
+При шаблонизации данных
+```json
+{
+ "users":
+  [
+   { "name": "Малькольм «Мэл» Рейнольдс", "admin": true },
+   { "name": "Зои Эллейн Уошбёрн", "admin": true },
+   { "text": "Хобан «Уош» Уошбёрн", "admin": false },
+   { "text": "Инара Серра", "admin": false },
+   { "text": "Джейн Кобб", "admin": false }
+  ]
+}
+```
+Получим результат
+```html
+<p>
+ Администраторы: <b>Малькольм «Мэл» Рейнольдс</b>, <b>Зои Эллейн Уошбёрн</b>
+</p>
+```
+
+#### Вставка накопленного контента `<flush>`
+
+```html
+<flush>expression</flush>
+```
+
+Вставляет накопленный контент `<capture>`
