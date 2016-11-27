@@ -1,11 +1,11 @@
 /*
-Z (zet) framework, version 0.6.1
-Code is available under the Piblic Domain (Unlicense) 
+Z (zet) framework, version 0.8.4
+Code is available under the Piblic Domain (Unlicense)
 */
 
 var z = (function(){
 
-	var 
+	var
 		handlers = {},
 		templates = document,
 		globals = null,
@@ -41,7 +41,7 @@ var z = (function(){
 	};
 
 	var addZStyles = function( ) {
-		var 
+		var
 			zElements = [ "template", "e", "dispatch", "exec", "hidden", "handler", "#zTemplates", "#zGlobal" ],
 			styleNode = document.createElement('style'),
 			styleSheet
@@ -53,14 +53,14 @@ var z = (function(){
 		styleSheet = styleNode.sheet;
 
 		styleSheet.insertRule( zElements.join(", ") + "{ display: none !important; }", 0 );
-		
+
 	};
 
 	var detachTemplateContainer = function () {
 
 		var tplNode = $("zTemplates");
 		if ( tplNode ) {
-			var 
+			var
 				tplNode = tplNode.parentNode.removeChild(tplNode),
 				iFrameNode = document.createElement("iframe"),
 				bodyNode = document.body
@@ -76,7 +76,7 @@ var z = (function(){
 			iFrameDoc.write("<!DOCTYPE HTML>\n<html><body>" + tplNode.innerHTML + "</body></html>");
 			iFrameDoc.close();
 
-			templates = iFrameNode.contentDocument;	
+			templates = iFrameNode.contentDocument;
 
 		}
 
@@ -84,11 +84,12 @@ var z = (function(){
 
 	var addGlobalContainer = function () {
 
-		var 
+		var
 			bodyNode = document.body
 		;
 
 		globals = document.createElement("global");
+		globals.id = "zGlobal";
 
 		bodyNode.insertBefore(globals, bodyNode.firstChild);
 
@@ -108,7 +109,7 @@ var z = (function(){
 
 		for ( var i=0, l=eList.length; i<l; i++ ) {
 
-			var 
+			var
 				node = eList[i],
 				eventName = node.getAttribute("on"),
 				handler = node.getAttribute("do"),
@@ -117,7 +118,7 @@ var z = (function(){
 
 			if ( !eventName || !handler ) continue;
 
-			var 
+			var
 				parentNode = node.parentNode,
 				targetNode = parentNode,
 				params = (node.textContent)? node.textContent.split(",") : []
@@ -153,13 +154,16 @@ var z = (function(){
 
 		for ( var i=0, l=eList.length; i<l; i++ ) {
 
-			var 
+			var
 				node = eList[i],
 				childNodes = node.childNodes
 			;
 
+			if (node._executed_) continue;
+			node._executed_ = true;
+
 			for ( var j=0, k=childNodes.length; j<k; j++ ) {
-				var 
+				var
 					childNode = childNodes[j],
 					nodeName = childNode.nodeName.toLowerCase()
 				;
@@ -183,13 +187,17 @@ var z = (function(){
 
 		for ( var i=0, l=eList.length; i<l; i++ ) {
 
-			var 
+			var
 				node = eList[i],
 				childNodes = node.childNodes,
 				eventName = node.getAttribute("on"),
 				keys = node.getAttribute("keys"),
 				confirmMsg = node.getAttribute("confirm"),
 				freezeTime = node.getAttribute("freeze"),
+				target = node.getAttribute("target"),
+				allowDefault = !!(node.hasAttribute("allowDefault")),
+				allowPropagation = !!(node.hasAttribute("allowPropagation")),
+				excludingSelection = !!(node.hasAttribute("excludingSelection")),
 				target = node.getAttribute("target"),
 				parentNode = node.parentNode,
 				targetNode = parentNode,
@@ -207,7 +215,7 @@ var z = (function(){
 			};
 
 			for ( var j=0, k=childNodes.length; j<k; j++ ) {
-				var 
+				var
 					childNode = childNodes[j],
 					nodeName = childNode.nodeName.toLowerCase()
 				;
@@ -224,6 +232,8 @@ var z = (function(){
 				if ( keys ) tmpFunc = handlerWithKeyLimits.bind( this, tmpFunc, keys );
 				if ( confirmMsg ) tmpFunc = handlerWithConfirm.bind( this, tmpFunc, confirmMsg );
 				if ( freezeTime ) tmpFunc = handlerWithFreezeTime.bind( this, tmpFunc, freezeTime );
+				if ( allowDefault || allowPropagation ) tmpFunc = handlerWithAllows.bind( this, tmpFunc, allowDefault, allowPropagation );
+				if ( excludingSelection ) tmpFunc = handlerWithExcludingSelection.bind( this, tmpFunc );
 				targetNode.addEventListener( eventName, tmpFunc, false );
 			}
 
@@ -236,15 +246,18 @@ var z = (function(){
 
 		var eList = container.getElementsByTagName( "wrapper" );
 
-		for ( var i=0, l=eList.length; i<l; i++ ) {
-			var 
-				node = eList[i],
-				targetNode = node.getElementsByTagName("*").item(0),
+		while ( eList.length ) {
+			var
+				node = eList.item(0),
 				parentNode = node.parentNode
 			;
 
-			parentNode.insertBefore( targetNode, node );
-		
+			while ( node.childNodes.length ) {
+				parentNode.insertBefore( node.firstChild, node );
+			}
+
+			parentNode.removeChild(node);
+
 		}
 
 	};
@@ -254,7 +267,7 @@ var z = (function(){
 		var eList = templates.querySelectorAll( "plurals" );
 
 		for ( var i=0, l=eList.length; i<l; i++ ) {
-			var 
+			var
 				node = eList[i],
 				jsonStr = node.textContent,
 				rule = node.getAttribute("rule") || 1;
@@ -282,22 +295,27 @@ var z = (function(){
 	var dispatch = function () {
 		try {
 
-			var 
+			var
 				DOMEvnt = ( arguments[1] && isDOMEvent(arguments[1]) )? arguments[1] : null,
 				l = arguments.length
 			;
 
 			if (DOMEvnt !== null) {
 				l--;
-				DOMEvnt.preventDefault(true);
-				DOMEvnt.stopPropagation(true);
+				var
+					zParams = DOMEvnt._z_ || {},
+					preventDefault = !( zParams.allowDefault ),
+					stopPropagation = !( zParams.allowPropagation)
+				;
+				if ( preventDefault ) DOMEvnt.preventDefault(true);
+				if ( stopPropagation ) DOMEvnt.stopPropagation(true);
 			}
 
 			var argArray = Array.prototype.slice.call(arguments,0,l);
 
 			for ( var i=0, l=argArray.length; i<l; i++ ) {
 
-				var 
+				var
 					arg = arguments[i],
 					eventName = arg.e,
 					target = arg.t || null,
@@ -314,7 +332,7 @@ var z = (function(){
 					var nodeList = globals.getElementsByTagName(eventName);
 
 					for ( var j = nodeList.length; j--; ) {
-						var 
+						var
 							shadowNode = nodeList[j],
 							targetNode = shadowNode._target_
 						;
@@ -322,6 +340,7 @@ var z = (function(){
 						if ( !targetNode ) continue;
 
 						if ( document.body.contains(targetNode) ) {
+							arg.DOMEvnt = DOMEvnt;
 							dispatchEvent( targetNode, arg, true );
 						}
 						else
@@ -368,7 +387,7 @@ var z = (function(){
 
 	var dispatchEvent = function ( node, event ) {
 
-		var 
+		var
 			eventName = event.e,
 			isGlobal = arguments[2] || false
 		;
@@ -382,23 +401,27 @@ var z = (function(){
 
 			if ( isGlobal ^ hObj.global ) continue;
 
-			if ( handlers[hObj.h] && handlers[hObj.h] instanceof Function ) 
+			if ( handlers[hObj.h] && handlers[hObj.h] instanceof Function )
 				try {
 					handlers[hObj.h].call( node, event, hObj.p );
-				} catch ( e ) { } 
+				} catch ( e ) { }
 		};
 
 	};
 
 	var dispatchById = function ( nodeID, mixin ) {
 		try {
-			var node = findDispatchNode(this, nodeID);
-			dispatch( getEventObj(node, mixin) );
+			var
+				node = findDispatchNode(this, nodeID),
+				zEvent = getEventObj(node, mixin)
+			;
+			dispatch(zEvent);
+			return zEvent;
 		} catch ( e ) { }
 	};
 
 	var dispatchWrapper = function ( node, DOMEvnt ) {
-		if ( !node ) return;
+		if ( !node || !document.body.contains(node) ) return;
 
 		var args = [ getEventObj(node) ];
 		if ( DOMEvnt ) args.push(DOMEvnt);
@@ -408,14 +431,16 @@ var z = (function(){
 
 	var createEObjFromDispatchNode = function ( node ) {
 
-		var 
+		var
 			eventAttr = node.getAttribute("e"),
 			useAttr = node.getAttribute("use")
 		;
 
 		if ( !(eventAttr || useAttr ) ) return;
 
-		var 
+		if ( !node.parentNode ) return;
+
+		var
 			propagationAttr = node.getAttribute("p"),
 			fromAttr = node.getAttribute("f"),
 			parentNode = node.parentNode,
@@ -426,9 +451,9 @@ var z = (function(){
 
 		if ( parentNodeName == "exec" || parentNodeName == "handler" ) parentNode = parentNode.parentNode;
 
-		var eventObj = 
-			{ 
-				e: eventAttr, 
+		var eventObj =
+			{
+				e: eventAttr,
 				t: node,
 				f: (fromAttr)? getParentNode(node, fromAttr) : parentNode
 			};
@@ -496,7 +521,7 @@ var z = (function(){
 
 		tmpData = JSON.parse(tmpData);
 
-		if (mixin) mixinData( tmpData, mixin );
+		if (mixin) extend(mixin, tmpData);
 
 		eventObj.data = tmpData;
 
@@ -505,7 +530,7 @@ var z = (function(){
 
 	var template = function ( event, options ) {
 
-		var 
+		var
 			tplID = options[0],
 			mode = ( options[1] )? options[1] : "replace",
 			containerNode = event.c,
@@ -527,7 +552,13 @@ var z = (function(){
 			childNodesCache.push( tmpFragment.childNodes[i] );
 		};
 
-		containerNode.appendChild( tmpFragment );
+		if ( mode !== "before" ) {
+			containerNode.appendChild( tmpFragment );
+		}
+		else
+		{
+			containerNode.insertBefore( tmpFragment, containerNode.firstChild );
+		}
 
 		containerNode._templated_ = true;
 
@@ -550,7 +581,7 @@ var z = (function(){
 					z.dispatch( newE );
 				}
 			}
-			
+
 		}
 
 		return containerNode;
@@ -559,7 +590,7 @@ var z = (function(){
 
 	var iterateTemplate = function ( tplNode, container, data ) {
 
-		var 
+		var
 			tplContent = tplNode.content || tplNode,
 			domNode = arguments[3] || null
 		;
@@ -574,7 +605,7 @@ var z = (function(){
 
 				case "if":
 
-					var 
+					var
 						exprAttr = childNode.getAttribute("expr"),
 						captures = domNode && domNode._captures_ || {},
 						exprFunc = new Function ( "_data_", "_captures_", "with(_data_){ try { return !!(" + exprAttr + ")} catch(e) { return false } }" )
@@ -598,20 +629,25 @@ var z = (function(){
 						expr = childNode.textContent,
 						exprArr = expr.split("^"),
 						retFunc = new Function ( "_data_", "with(_data_){ try { return " + exprArr[0] + " } catch (e) { return '' } }" ),
-						res = retFunc(data),
-						res = ( res === undefined || res === null )? "" : res,
-						res = ( res === "" && defaultVal )? defaultVal : res,
-						tmpNode = document.createTextNode(res)
+						txt = retFunc(data),
+						txt = ( txt === undefined || txt === null )? "" : txt,
+						txt = ( txt === "" && defaultVal )? defaultVal : txt
 					;
 					if ( exprArr.length > 1 ) {
-						var 
+						var
 							retFunc = new Function ( "_data_", "with(_data_){ try { return " + exprArr[1] + " } catch (e) { return '' } }" ),
 							pluralVal = retFunc(data),
 							type = exprArr[2] || 1,
-							tmpNode = document.createTextNode( getPluralText( type, res, pluralVal ) )
+							txt = getPluralText( type, txt, pluralVal )
 						;
 					};
-					container.appendChild( tmpNode );
+					if (container.nodeName === "TEXTAREA") {
+						container.value = txt;
+					}
+					else
+					{
+						container.appendChild( document.createTextNode(txt) );
+					}
 					break;
 
 				case "inner_html":
@@ -630,14 +666,29 @@ var z = (function(){
 					{
 						var tmpElement = document.createElement("div");
 						tmpElement.innerHTML = res;
-						for ( var i=0, l=tmpElement.childNodes.length; i<l; i++ ) {
-							container.appendChild(tmpElement.childNodes.item(i));
+						while (tmpElement.childNodes.length) {
+							container.appendChild(tmpElement.childNodes.item(0));
 						}
 					}
 					break;
 
+				case "dom":
+					var
+						expr = childNode.textContent,
+						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
+						res = retFunc(data)
+					;
+
+					if ( !res ) break;
+
+					while (res.length) {
+						container.appendChild(res.item(0));
+					}
+
+					break;
+
 				case "val_by":
-					var 
+					var
 						defaultVal = childNode.getAttribute("default") || "",
 						expr = childNode.textContent,
 						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
@@ -652,14 +703,14 @@ var z = (function(){
 					break;
 
 				case "include":
-					var 
+					var
 						tplId = childNode.getAttribute("tpl"),
 						tmpFragment = document.createDocumentFragment()
 					;
 
 					iterateTemplate( childNode, tmpFragment, data, domNode );
 
-					var 
+					var
 						expr = tmpFragment.textContent.trim(),
 						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return '' } }" ),
 						res = retFunc(data) || data,
@@ -673,7 +724,7 @@ var z = (function(){
 
 				case "tag":
 
-					var 
+					var
 						cloneNode = childNode.cloneNode(true),
 						nameNode = getChildByName.call( cloneNode, "name" ),
 						tmpFragment = document.createDocumentFragment()
@@ -700,10 +751,11 @@ var z = (function(){
 
 				case "attr":
 
-					var 
+					var
 						nameAttr = childNode.getAttribute("name"),
 						tmpFragment = document.createDocumentFragment(),
-						targetNode = ( container.nodeName.toUpperCase() === "WRAPPER" )? container.getElementsByTagName("*").item(0) : container
+						targetNode = ( container.nodeName.toUpperCase() === "WRAPPER" )? container.getElementsByTagName("*").item(0) : container,
+						targetNode = ( targetNode.nodeType == 11 )? domNode : targetNode
 					;
 
 					iterateTemplate( childNode, tmpFragment, data, domNode );
@@ -712,13 +764,17 @@ var z = (function(){
 					break;
 
 				case "class":
-					var cloneNode = childNode.cloneNode();
+					var
+						cloneNode = childNode.cloneNode(),
+						targetNode = ( container.nodeName.toUpperCase() === "WRAPPER" )? container.getElementsByTagName("*").item(0) : container,
+						targetNode = ( targetNode.nodeType == 11 )? domNode : targetNode
+					;
 					iterateTemplate( childNode, cloneNode, data, domNode );
-					container.classList.add( cloneNode.textContent.trim() );
+					targetNode.classList.add( cloneNode.textContent.trim() );
 					break;
 
 				case "foreach":
-					var 
+					var
 						fromAttr = childNode.getAttribute("from"),
 						itemAttr = childNode.getAttribute("item"),
 						keyAttr = childNode.getAttribute("key")
@@ -728,10 +784,11 @@ var z = (function(){
 
 					var
 						retFunc = new Function ( "_data_", "with(_data_){ try { return " + fromAttr + " } catch (e) { return '' } }" ),
-						res = retFunc(data)
+						res = retFunc(data),
+						instanceOf = Object.prototype.toString.call(res).slice(8,-1)
 					;
 
-					if ( Array.isArray(res) ) {
+					if ( Array.isArray(res) || instanceOf == "FileList" ) {
 						for ( var j=0, k=res.length; j<k; j++ ) {
 							var tmpObj = { _parent_: data };
 							tmpObj[itemAttr] = res[j];
@@ -751,7 +808,7 @@ var z = (function(){
 					break;
 
 				case "capture":
-					var 
+					var
 						captureName = childNode.getAttribute("to"),
 						initName = childNode.getAttribute("init"),
 						expr = childNode.getAttribute("expr") || true,
@@ -762,7 +819,7 @@ var z = (function(){
 					if ( captureName && res ) {
 						if ( captures === undefined ) captures = domNode._captures_ = {};
 						if ( !Array.isArray(captures[captureName]) ) captures[captureName] = [];
-						
+
 						var
 							tmpElement = document.createElement("content");
 						;
@@ -787,8 +844,8 @@ var z = (function(){
 					{
 						var tmpElement = document.createElement("div");
 						tmpElement.innerHTML = res;
-						for ( var i=0, l=tmpElement.childNodes.length; i<l; i++ ) {
-							container.appendChild(tmpElement.childNodes.item(i));
+						for ( var j=0, k=tmpElement.childNodes.length; j<k; j++ ) {
+							container.appendChild(tmpElement.childNodes.item(j));
 						}
 					}
 
@@ -797,11 +854,21 @@ var z = (function(){
 				case "datetime":
 					var
 						expr = childNode.getAttribute("use"),
+						utc = childNode.hasAttribute("utc"),
 						retFunc = new Function ( "_data_", "with(_data_){ try { return " + expr + " } catch (e) { return null } }" ),
 						res = retFunc(data),
 						now = new Date(),
 						dt = new Date(),
-						dtObj = null
+						dtObj = null,
+						setHours = (utc)? "setUTCHours": "setHours",
+						setDate = (utc)? "setUTCDate": "setDate",
+						getFullYear = (utc)? "getUTCFullYear" : "getFullYear",
+						getMonth = (utc)? "getUTCMonth" : "getMonth",
+						getDate = (utc)? "getUTCDate" : "getDate",
+						getHours = (utc)? "getUTCHours" : "getHours",
+						getMinutes = (utc)? "getUTCMinutes" : "getMinutes",
+						getSeconds = (utc)? "getUTCSeconds" : "getSeconds",
+						getDay = (utc)? "getUTCDay" : "getDay"
 					;
 					if ( res !== null && res !== undefined ) {
 						try {
@@ -811,10 +878,10 @@ var z = (function(){
 
 						var
 							daysDiff = Math.floor(Math.abs((dt - now) / (1000 * 3600 * 24))),
-							tds = now.setHours(0,0,0,0).valueOf(),
-							ys = now.setDate(now.getDate()-1).valueOf(),
-							tms = now.setDate(now.getDate()+2).valueOf(),
-							tme = now.setDate(now.getDate()+1).valueOf(),
+							tds = now[setHours](0,0,0,0).valueOf(),
+							ys = now[setDate](now[getDate]()-1).valueOf(),
+							tms = now[setDate](now[getDate]()+2).valueOf(),
+							tme = now[setDate](now[getDate]()+1).valueOf(),
 
 							dtv = dt.valueOf(),
 							rel = "past",
@@ -826,15 +893,16 @@ var z = (function(){
 							dtObj =
 								{
 									raw: dt,
-									y: dt.getFullYear(),
-									m: dt.getMonth(),
-									d: dt.getDate(),
-									H: dt.getHours(),
-									M: dt.getMinutes(),
-									S: dt.getSeconds(),
-									wd: dt.getDay(),
+									y: dt[getFullYear](),
+									m: dt[getMonth](),
+									d: dt[getDate](),
+									H: dt[getHours](),
+									M: dt[getMinutes](),
+									S: dt[getSeconds](),
+									wd: dt[getDay](),
 								    daysDiff: daysDiff,
-								    rel: rel
+								    rel: rel,
+								    utc: utc
 								}
 						;
 					}
@@ -862,7 +930,7 @@ var z = (function(){
 					iterateTemplate( childNode, tmpNode, data, tmpNode );
 					container.appendChild( tmpNode );
 					break;
-					
+
 				default:
 					var cloneNode = childNode.cloneNode();
 					iterateTemplate( childNode, cloneNode, data, cloneNode );
@@ -880,10 +948,10 @@ var z = (function(){
 
 		try {
 			var firstChar = path.charAt(0);
-			
+
 			switch ( firstChar ) {
 				case "#": return $(path.substr(1));
-				case ".": 
+				case ".":
 					var parentNode = node.parentNode;
 					var className = path.substr(1);
 					if ( !className ) return node;
@@ -937,7 +1005,7 @@ var z = (function(){
 		}
 	};
 	var handlerWithKeyLimits = function ( handler, keys, DOMEvnt ) {
-		var 
+		var
 			keyArr = keys.split(","),
 			eType = DOMEvnt.type,
 			keyCode = DOMEvnt.keyCode,
@@ -1000,13 +1068,30 @@ var z = (function(){
 			DOMEvnt.stopPropagation(true);
 		}
 	};
+	var handlerWithAllows = function ( handler, allowDefault, allowPropagation, DOMEvnt ) {
+		DOMEvnt._z_ = {
+			allowDefault: allowDefault,
+			allowPropagation: allowPropagation
+		}
+		handler( DOMEvnt );
+	};
+	var handlerWithExcludingSelection = function ( handler, DOMEvnt ) {
+		if ( window.getSelection().toString() === "" ) {
+			handler( DOMEvnt );
+		}
+		else
+		{
+			DOMEvnt.preventDefault(true);
+			DOMEvnt.stopPropagation(true);
+		};
+	};
 
 	var getPluralText = function ( type, key, value ) {
 
 		if ( !(plurals[type] instanceof Object) ) return "";
 
 		try {
-			var 
+			var
 				pluralValuesByType = plurals[type],
 				pluralArr = pluralValuesByType[key],
 				pArrLength = pluralArr.length || 0,
@@ -1023,16 +1108,19 @@ var z = (function(){
 
 	};
 
-	var mixinData = function ( toObj, fromObj ) {
-		if ( !fromObj || !toObj) return;
+	var extend = function ( from, to ) {
 
-		var 
-			keys = Object.keys(fromObj)
-		;
+		if (from == null || typeof from != "object") return from;
+		if (from.constructor != Object && from.constructor != Array) return from;
+		if (from.constructor == Date || from.constructor == RegExp || from.constructor == Function || from.constructor == String || from.constructor == Number || from.constructor == Boolean) return new from.constructor(from);
 
-		for( var i=0, key=keys[i], l=keys.length; i<l; i++, key=keys[i] ) {
-			toObj[key] = fromObj[key];
+		to = to || new from.constructor();
+
+		for (var name in from) {
+			to[name] = (typeof to[name] == "undefined") ? extend(from[name], null) : to[name];
 		}
+
+		return to;
 	}
 
 	var isDOMEvent = function ( DOMEvnt ) {
@@ -1074,7 +1162,7 @@ z.addHandler( "templateIfMatch", function ( e, data ) {
 
 	e.c = this;
 	z.template( e, options );
-	
+
 });
 z.addHandler( "templateIfAttrMatch", function ( e, data ) {
 
@@ -1107,31 +1195,33 @@ z.addHandler( "templateIfExists", function ( e, data ) {
 
 });
 z.addHandler( "templateScopeIfExists", function ( e, data ) {
-
 	var
 		property = data[0],
 		options = data.slice(1),
+		exprFunc = new Function ( "_data_", "with(_data_){ try { return " + property + "} catch(e) { return undefined } }" ),
+		targetObj = exprFunc (e.data),
+		propName = property.split(".").pop(),
 		eventClone = Object.create(e),
 		localDataObj
 	;
 
-	if ( e.data[property] === undefined ) return;
+	if ( targetObj === undefined ) return;
 
-	if ( e.data[property] instanceof Array ) {
-		localDataObj = e.data[property].slice();
+	if ( targetObj instanceof Array ) {
+		localDataObj = targetObj.slice();
 	}
 	else
 	{
-		localDataObj = JSON.parse(JSON.stringify((e.data[property])));
+		localDataObj = JSON.parse(JSON.stringify(targetObj));
 	}
 
 	eventClone.c = this;
 	eventClone.data = {};
-	eventClone.data[property] = localDataObj;
+	eventClone.data[propName] = localDataObj;
 
 	z.template( eventClone, options );
-
 });
+
 z.addHandler( "templateOnce", function ( e, data ) {
 	e.c = this;
 	data[1] = "once";
