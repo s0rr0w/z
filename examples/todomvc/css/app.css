@@ -1,0 +1,10 @@
+﻿[filter="active"] li.completed,
+[filter="completed"] li:not(.completed),
+.all-active .clear-completed
+{
+	display: none;
+}
+.todo-list li label
+{
+	white-space: initial;
+}

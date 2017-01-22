@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en" data-framework="javascript">
+	<head>
+		<meta charset="utf-8">
+		<title>Z • TodoMVC</title>
+		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<link rel="stylesheet" href="css/app.css">
+	</head>
+	<body>
+
+		<section class="todoapp">
+			<e on="init" do="loadDataFromLocalStorage">todoappStoredData</e>
+			<e on="init" do="getUrlHash">filter,all</e>
+			<e on="init" do="template">todoLayout,replace,propagate,*</e>
+		</section>
+
+		<footer class="info">
+			<p>Double-click to edit a todo</p>
+			<p>Created by <a href="https://github.com/s0rr0w">Oleksandr Shpak</a></p>
+			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+		</footer>
+
+		<template id="zTemplates">
+
+			<template id="todoLayout">
+
+				<dispatch name="addNewItem" e="addNewItem" p=".new-todo,.todo-list"></dispatch>
+				<dispatch name="countItems" e="countItems" p="LI,.toggle,.todo-count,.toggle-all,childNodes">{ "total": 0, "active": 0, "done": 0 }</dispatch>
+				<dispatch name="filterList" e="filterList" p="A,.todo-list"></dispatch>
+				<dispatch name="clearCompleted" e="clearCompleted" p=".completed"></dispatch>
+				<dispatch name="storeList" e="storeList" p="LI,HIDDEN"></dispatch>
+
+				<include tpl="todoHeader"></include>
+				<include tpl="todoMain"></include>
+				<include tpl="todoFooter"></include>
+
+				<hidden>
+					<e on="countItems" do="dispatchEvent">.todoapp/storeList</e>
+					<e on="storeList" do="saveDataToLocalStorage">todoappStoredData</e>
+				</hidden>
+
+			</template>
+
+			<template id="todoHeader">
+				<header class="header">
+					<h1>todos</h1>
+					<wrapper>
+
+						<input class="new-todo" placeholder="What needs to be done?" autofocus/>
+
+						<e on="addNewItem" do="collectData">todoText</e>
+						<e on="addNewItem" do="clearValue"></e>
+
+						<handler on="keyup" keys="ENTER">
+							<dispatch use=".todoapp/addNewItem"></dispatch>
+						</handler>
+
+					</wrapper>
+				</header>
+			</template>
+
+			<template id="todoMain">
+				<section class="main">
+
+					<e on="init" do="dispatchEvent">.todoapp/countItems</e>
+
+				    <e on="countItems" do="smartClassProcess">add,hidden,$total=0</e>
+
+					<wrapper>
+
+						<input class="toggle-all" type="checkbox" />
+
+						<e on="countItems" do="checkIf">$active=0</e>
+						<e on="toggleAll" do="collectData">completeAll,simple</e>
+						<e on="toggleAll" do="propagationJump">.todoapp,LI,.toggle</e>
+
+						<handler on="click" allowDefault>
+							<dispatch e="toggleAll" f=".main" p="INPUT"></dispatch>
+							<dispatch use=".todoapp/countItems"></dispatch>
+						</handler>
+
+					</wrapper>
+
+					<label for="toggle-all">Mark all as complete</label>
+					
+					<ul class="todo-list">
+						<e on="addNewItem" do="template">todoItem,add</e>
+						<e on="filterList" do="setAttr">filter</e>
+
+						<if expr="todoappStoredData.list">
+							<foreach from="todoappStoredData.list" item="item">
+								<include tpl="todoItem"><value>JSON.stringify(item)</value></include>
+							</forech>
+						</if>
+					</ul>
+				</section>
+			</template>
+
+			<template id="todoFooter">
+				<footer class="footer">
+					<e on="init" do="dispatchEvent">.todoapp/filterList,mixin</e>
+
+				    <e on="countItems" do="smartClassProcess">add,hidden,$total=0</e>
+				    <e on="countItems" do="smartClassProcess">add,all-active,$done=0</e>
+
+					<span class="todo-count">
+						<e on="countItems" do="template">todoCount,replace</e>
+					</span>
+
+					<ul class="filters">
+						<li>
+							<a href="#/">
+								<e on="filterList" do="smartClassProcess">add,selected,$filter=all</e>
+								<handler on="click" allowDefault>
+									<dispatch use=".todoapp/filterList">{ "filter": "all" }</dispatch>
+								</handler>
+								All
+							</a>
+						</li>
+						<li>
+							<a href="#/active">
+								<e on="filterList" do="smartClassProcess">add,selected,$filter=active</e>
+								<handler on="click" allowDefault>
+									<dispatch use=".todoapp/filterList">{ "filter": "active" }</dispatch>
+								</handler>
+								Active
+							</a>
+						</li>
+						<li>
+							<a href="#/completed">
+								<e on="filterList" do="smartClassProcess">add,selected,$filter=completed</e>
+								<handler on="click" allowDefault>
+									<dispatch use=".todoapp/filterList">{ "filter": "completed" }</dispatch>
+								</handler>
+								Completed
+							</a>
+						</li>
+					</ul>
+
+					<button class="clear-completed">
+
+						<handler on="click">
+							<dispatch use=".todoapp/clearCompleted"></dispatch>
+							<dispatch use=".todoapp/countItems"></dispatch>
+						</handler>
+
+						Clear completed
+					</button>
+
+				</footer>
+			</template>
+
+			<template id="todoItem">
+				<if expr="todoText">
+					<li>
+
+						<e on="countItems" do="countMe">total</e>
+						<e on="toggleState" do="swapClass">completed</e>
+						<e on="toggleAll" do="smartClassProcess">add,completed,$completeAll=1</e>
+						<e on="clearCompleted" do="removeChild"></e>
+						<e on="removeItem" do="removeChildAndDispatch"></e>
+
+						<e on="editModeOn" do="addClass">editing</e>
+						<e on="doneEditing" do="removeClass">editing</e>
+
+						<e on="storeList" do="collectAsArr">list</e>
+						<e on="collectAsArr" do="collectAsObj">.todo-text</e>
+						<e on="collectAsObj" do="collectClassPresent">completed,completed</e>
+
+						<dispatch name="setNewText" e="doneEditing" p=".edit,.todo-text,.view"></dispatch>
+
+						<if expr="completed">
+							<class>completed</class>
+						</if>
+
+						<div class="view">
+
+							<e on="doneEditing" do="dispatchEvent">.todoapp/storeList</e>
+
+							<wrapper>
+
+								<input class="toggle" type="checkbox" />
+
+								<e on="countItems" do="countMe">active,!checked</e>
+								<e on="countItems" do="countMe">done,checked</e>
+								<e on="toggleAll" do="checkIf">$completeAll=1</e>
+
+								<if expr="completed">
+									<attr name="checked">checked</attr>
+								</if>
+
+								<handler on="click" allowDefault>
+									<dispatch e="toggleState" f="LI" p="parent"></dispatch>
+									<dispatch use=".todoapp/countItems"></dispatch>
+								</handler>
+
+							</wrapper>
+
+							<label>
+
+								<span class="todo-text">
+
+									<e on="editModeOn" do="collectData">todoText</e>
+									<e on="doneEditing" do="template">todoText</e>
+									<e on="collectAsObj" do="collectData">todoText</e>
+
+									<include tpl="todoText"></include>
+
+								</span>
+
+								<handler on="dblclick">
+									<dispatch e="editModeOn" f="LI" p=".todo-text,.edit"></dispatch>
+								</handler>
+
+							</label>
+
+							<button class="destroy">
+
+								<handler on="click">
+									<dispatch e="removeItem" f="LI" p="parent">
+										{
+											"dispatch":
+												[
+													{ "f": ".todoapp", "use": "./countItems" }
+												]
+										}
+									</dispatch>
+								</handler>
+
+							</button>
+						</div>
+
+						<wrapper>
+
+							<input class="edit"/>
+
+							<e on="editModeOn" do="setValue">todoText</e>
+							<e on="editModeOn" do="focusIt">todoText</e>
+							<e on="doneEditing" do="collectData">todoText</e>
+
+							<handler on="keyup" keys="ENTER">
+								<dispatch use="LI/setNewText"></dispatch>
+							</handler>
+
+							<handler on="keyup" keys="ESC">
+								<dispatch e="doneEditing" f="LI" p="parent"></dispatch>
+							</handler>
+
+							<handler on="blur">
+								<dispatch use=".editing/setNewText"></dispatch>
+							</handler>
+
+						</wrapper>
+
+						<exec>
+							<dispatch use=".todoapp/countItems"></dispatch>
+						</exec>
+					</li>
+				</if>
+			</template>
+
+			<template id="todoCount">
+				<value>active</value> <value>"items_left"^active</value>
+			</template>
+
+			<template id="todoText">
+				<value>todoText</value>
+			</template>
+
+			<plurals>
+				{
+					"items_left": [ "item left", "items left" ]
+				}
+			</plurals>
+
+		</template>
+
+		<exec>
+			<dispatch e="init"></dispatch>
+		</exec>
+
+		<script src="node_modules/todomvc-common/base.js"></script>
+		<script src="js/z.js"></script>
+		<script src="js/z_handlers.js"></script>
+
+	</body>
+</html>
